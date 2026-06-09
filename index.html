@@ -335,10 +335,16 @@
             trendChart.render(); 
         }
 
-        function renderStockChart(years, profits) {
+function renderStockChart(years, profits) {
             new ApexCharts(document.querySelector("#stockProfitChart"), {
                 series: [{ name: '연도별 실현손익', data: profits }],
-                chart: { type: 'area', height: 240, toolbar: { show: false } },
+                chart: { 
+                    type: 'area', 
+                    height: 240, 
+                    toolbar: { show: false },
+                    zoom: { enabled: false },      // 확대 기능 끄기
+                    selection: { enabled: false }  // 드래그 영역 지정 끄기
+                },
                 colors: ['#10b981'],
                 stroke: { curve: 'smooth', width: 2.5 },
                 fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 90, 100] } },
