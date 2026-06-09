@@ -1,388 +1,365 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="ko">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2575.6">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; -webkit-text-stroke: #000000}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; -webkit-text-stroke: #000000; min-height: 14.0px}
-    p.p3 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px 'Apple SD Gothic Neo'; -webkit-text-stroke: #000000}
-    span.s1 {font-kerning: none}
-    span.s2 {font: 12.0px 'Apple SD Gothic Neo'; font-kerning: none}
-    span.s3 {font: 12.0px 'Apple Color Emoji'; font-kerning: none}
-    span.s4 {font: 12.0px Helvetica; font-kerning: none}
-    span.s5 {font: 12.0px 'Lucida Grande'; font-kerning: none}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>통합 자산 관리 대시보드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+        body { font-family: 'Inter', 'Noto Sans KR', sans-serif; }
+        .loader { border-top-color: #3b82f6; animation: spinner 1.5s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
 </head>
-<body>
-<p class="p1"><span class="s1">&lt;!DOCTYPE html&gt;</span></p>
-<p class="p1"><span class="s1">&lt;html lang="ko"&gt;</span></p>
-<p class="p1"><span class="s1">&lt;head&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;title&gt;</span><span class="s2">통합</span><span class="s1"> </span><span class="s2">자산</span><span class="s1"> </span><span class="s2">관리</span><span class="s1"> </span><span class="s2">대시보드</span><span class="s1">&lt;/title&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;!-- </span><span class="s2">안정적인</span><span class="s1"> </span><span class="s2">모바일</span><span class="s1"> </span><span class="s2">호환을</span><span class="s1"> </span><span class="s2">위해</span><span class="s1"> Tailwind v3 CDN </span><span class="s2">사용</span><span class="s1"> --&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.jsdelivr.net/npm/apexcharts"&gt;&lt;/script&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;style&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap');</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>body { font-family: 'Inter', 'Noto Sans KR', sans-serif; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.loader { border-top-color: #3b82f6; animation: spinner 1.5s linear infinite; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>@keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
-<p class="p1"><span class="s1">&lt;body class="bg-slate-50 text-slate-800 antialiased p-3 md:p-8"&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div id="loadingOverlay" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-4 text-center"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-200 h-10 w-10 mb-3"&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;p class="text-xs font-semibold text-slate-600"&gt;</span><span class="s2">자산</span><span class="s1"> </span><span class="s2">포트폴리오</span><span class="s1"> </span><span class="s2">안전</span><span class="s1"> </span><span class="s2">연결</span><span class="s1"> </span><span class="s2">중</span><span class="s1">...&lt;/p&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="max-w-7xl mx-auto space-y-5"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;header class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-3"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;h1 class="text-xl md:text-2xl font-bold tracking-tight text-slate-900"&gt;</span><span class="s2">통합</span><span class="s1"> </span><span class="s2">자산</span><span class="s1"> </span><span class="s2">관리</span><span class="s1"> </span><span class="s2">대시보드</span><span class="s1">&lt;/h1&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;p class="text-[11px] text-slate-500 mt-0.5"&gt;</span><span class="s2">경훈</span><span class="s1"> · </span><span class="s2">인희</span><span class="s1"> · </span><span class="s2">강록</span><span class="s1"> </span><span class="s2">가족의</span><span class="s1"> </span><span class="s2">실시간</span><span class="s1"> </span><span class="s2">자산</span><span class="s1"> </span><span class="s2">트래킹</span><span class="s1"> </span><span class="s2">시스템</span><span class="s1">&lt;/p&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/header&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;section class="bg-white p-4 md:p-6 rounded-xl shadow-xs border border-slate-100"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div class="flex flex-row items-center justify-between gap-2 mb-4"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;h2 class="text-sm md:text-base font-bold text-slate-900"&gt;</span><span class="s3">📊</span><span class="s1"> </span><span class="s2">자산</span><span class="s1"> </span><span class="s2">현황</span><span class="s1"> </span><span class="s2">및</span><span class="s1"> </span><span class="s2">세부</span><span class="s1"> </span><span class="s2">구성</span><span class="s1">&lt;/h2&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;div class="flex items-center space-x-1.5"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;select id="filterYear" onchange="onYearSelectorChange(this.value)" class="bg-slate-50 border border-slate-200 text-slate-700 text-[11px] rounded-md p-1.5 font-bold focus:ring-2 focus:ring-blue-500"&gt;&lt;/select&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;select id="filterMonth" onchange="onMonthSelectorChange(this.value)" class="bg-slate-50 border border-slate-200 text-slate-700 text-[11px] rounded-md p-1.5 font-bold focus:ring-2 focus:ring-blue-500"&gt;&lt;/select&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</span></p>
-<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;div class="grid grid-cols-2 lg:grid-cols-1 lg:col-span-3 gap-3"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;div class="bg-emerald-50/40 border border-emerald-100 p-3.5 rounded-xl"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;span class="text-[10px] font-semibold text-emerald-700 uppercase tracking-wider"&gt;</span><span class="s2">총</span><span class="s1"> </span><span class="s2">순자산</span><span class="s1">&lt;/span&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;div class="mt-0.5"&gt;&lt;span id="liveNetAsset" class="text-base md:text-lg font-extrabold text-emerald-900"&gt;-&lt;/span&gt;&lt;span class="text-[10px] font-bold text-emerald-800"&gt; </span><span class="s2">원</span><span class="s1">&lt;/span&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;p id="liveDiff" class="text-[9px] font-semibold mt-0.5 text-slate-400"&gt;</span><span class="s2">계산</span><span class="s1"> </span><span class="s2">중</span><span class="s1">...&lt;/p&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;div class="bg-rose-50/40 border border-rose-100 p-3.5 rounded-xl"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;span class="text-[10px] font-semibold text-rose-700 uppercase tracking-wider"&gt;</span><span class="s2">총</span><span class="s1"> </span><span class="s2">부채</span><span class="s1"> </span><span class="s2">잔액</span><span class="s1">&lt;/span&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;div class="mt-0.5"&gt;&lt;span id="liveDebt" class="text-base md:text-lg font-extrabold text-rose-900"&gt;-&lt;/span&gt;&lt;span class="text-[10px] font-bold text-rose-800"&gt; </span><span class="s2">원</span><span class="s1">&lt;/span&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;div class="lg:col-span-4 bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center justify-center min-h-[180px]"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;div id="pieChart" class="w-full"&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;div class="lg:col-span-5 border border-slate-100 rounded-xl overflow-hidden bg-white shadow-xs"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;table class="w-full text-left text-slate-500 text-[11px]"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;thead class="text-slate-700 uppercase bg-slate-50 border-b border-slate-100"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>&lt;tr&gt;&lt;th class="px-3 py-2"&gt;</span><span class="s2">구성</span><span class="s1"> </span><span class="s2">항목</span><span class="s1">&lt;/th&gt;&lt;th class="px-3 py-2 text-right"&gt;</span><span class="s2">금액</span><span class="s1"> (</span><span class="s2">원</span><span class="s1">)&lt;/th&gt;&lt;/tr&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;/thead&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;tbody class="divide-y divide-slate-100 font-medium"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>&lt;tr&gt;&lt;td class="px-3 py-2 flex items-center gap-1.5 text-slate-900"&gt;&lt;span class="w-2 h-2 rounded-sm bg-[#3b82f6]"&gt;&lt;/span&gt;</span><span class="s2">부동산</span><span class="s1">(</span><span class="s2">주담대</span><span class="s1"> </span><span class="s2">제외</span><span class="s1">)&lt;/td&gt;&lt;td id="tblEstate" class="px-3 py-2 text-right text-slate-900 font-bold"&gt;-&lt;/td&gt;&lt;/tr&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>&lt;tr&gt;&lt;td class="px-3 py-2 flex items-center gap-1.5 text-slate-900"&gt;&lt;span class="w-2 h-2 rounded-sm bg-[#f59e0b]"&gt;&lt;/span&gt;</span><span class="s2">주식</span><span class="s1"> / </span><span class="s2">코인</span><span class="s1"> </span><span class="s2">투자자산</span><span class="s1">&lt;/td&gt;&lt;td id="tblInvest" class="px-3 py-2 text-right text-slate-900 font-bold"&gt;-&lt;/td&gt;&lt;/tr&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>&lt;tr&gt;&lt;td class="px-3 py-2 flex items-center gap-1.5 text-slate-900"&gt;&lt;span class="w-2 h-2 rounded-sm bg-[#10b981]"&gt;&lt;/span&gt;</span><span class="s2">안전</span><span class="s1"> </span><span class="s2">예적금</span><span class="s1"> </span><span class="s2">자산</span><span class="s1">&lt;/td&gt;&lt;td id="tblDeposit" class="px-3 py-2 text-right text-slate-900 font-bold"&gt;-&lt;/td&gt;&lt;/tr&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>&lt;tr&gt;&lt;td class="px-3 py-2 flex items-center gap-1.5 text-slate-900"&gt;&lt;span class="w-2 h-2 rounded-sm bg-[#64748b]"&gt;&lt;/span&gt;</span><span class="s2">장기</span><span class="s1"> </span><span class="s2">노후자금</span><span class="s1">&lt;/td&gt;&lt;td id="tblRetire" class="px-3 py-2 text-right text-slate-900 font-bold"&gt;-&lt;/td&gt;&lt;/tr&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;/tbody&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;/table&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/section&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;section class="bg-white p-4 md:p-6 rounded-xl shadow-xs border border-slate-100 space-y-4"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;h2 class="text-sm md:text-base font-bold text-slate-900"&gt;</span><span class="s3">📈</span><span class="s1"> </span><span class="s2">월별</span><span class="s1"> </span><span class="s2">자산</span><span class="s1"> </span><span class="s2">성장</span><span class="s1"> </span><span class="s2">추이</span><span class="s1">&lt;/h2&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div class="grid grid-cols-2 md:grid-cols-5 gap-2.5"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;div class="bg-slate-50 border border-slate-100 p-2.5 rounded-lg flex flex-col justify-center col-span-2 md:col-span-1"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider"&gt;</span><span class="s2">누적</span><span class="s1"> </span><span class="s2">기록</span><span class="s1"> </span><span class="s2">기간</span><span class="s1">&lt;/span&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;div class="mt-0.5 flex items-baseline gap-0.5"&gt;&lt;span id="metricMonths" class="text-sm font-extrabold text-slate-900"&gt;-&lt;/span&gt;&lt;span class="text-[10px] font-bold text-slate-600"&gt;</span><span class="s2">개월</span><span class="s1">&lt;/span&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;div class="bg-indigo-50/40 border border-indigo-100 p-2.5 rounded-lg flex flex-col justify-center"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;span class="text-[9px] font-bold text-indigo-700 uppercase tracking-wider"&gt;</span><span class="s2">월</span><span class="s1"> </span><span class="s2">평균</span><span class="s1"> </span><span class="s2">수익률</span><span class="s1">&lt;/span&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;div class="mt-0.5 flex items-baseline gap-0.5"&gt;&lt;span id="metricRate" class="text-sm font-extrabold text-indigo-900"&gt;-&lt;/span&gt;&lt;span class="text-[10px] font-bold text-indigo-800"&gt;%&lt;/span&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;div class="bg-emerald-50/40 border border-emerald-100 p-2.5 rounded-lg flex flex-col justify-center"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;span class="text-[9px] font-bold text-emerald-700 uppercase tracking-wider"&gt;</span><span class="s2">월</span><span class="s1"> </span><span class="s2">평균</span><span class="s1"> </span><span class="s2">증가액</span><span class="s1">&lt;/span&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;div class="mt-0.5 flex items-baseline gap-0.5"&gt;&lt;span id="metricIncrement" class="text-sm font-extrabold text-emerald-900"&gt;-&lt;/span&gt;&lt;span class="text-[10px] font-bold text-emerald-800"&gt;</span><span class="s2">원</span><span class="s1">&lt;/span&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;div class="bg-violet-50/40 border border-violet-100 p-2.5 rounded-lg flex flex-col justify-center"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;span class="text-[9px] font-bold text-violet-700 uppercase tracking-wider"&gt;</span><span class="s2">연</span><span class="s1"> </span><span class="s2">평균</span><span class="s1"> </span><span class="s2">수익률</span><span class="s1">&lt;/span&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;div class="mt-0.5 flex items-baseline gap-0.5"&gt;&lt;span id="metricYearlyRate" class="text-sm font-extrabold text-violet-900"&gt;-&lt;/span&gt;&lt;span class="text-[10px] font-bold text-violet-800"&gt;%&lt;/span&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;div class="bg-teal-50/40 border border-teal-100 p-2.5 rounded-lg flex flex-col justify-center"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;span class="text-[9px] font-bold text-teal-700 uppercase tracking-wider"&gt;</span><span class="s2">연</span><span class="s1"> </span><span class="s2">평균</span><span class="s1"> </span><span class="s2">증가액</span><span class="s1">&lt;/span&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;div class="mt-0.5 flex items-baseline gap-0.5"&gt;&lt;span id="metricYearlyIncrement" class="text-sm font-extrabold text-teal-900"&gt;-&lt;/span&gt;&lt;span class="text-[10px] font-bold text-teal-800"&gt;</span><span class="s2">원</span><span class="s1">&lt;/span&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div id="trendChart" class="pt-1"&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/section&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;section class="bg-white p-4 md:p-6 rounded-xl shadow-xs border border-slate-100"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;h2 class="text-sm md:text-base font-bold text-slate-900 mb-4"&gt;</span><span class="s3">🏠</span><span class="s1"> </span><span class="s2">아파트</span><span class="s1"> </span><span class="s2">매수매도</span><span class="s1"> </span><span class="s2">히스토리</span><span class="s1">&lt;/h2&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div id="estateTimelineContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/section&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;section class="bg-white p-4 md:p-6 rounded-xl shadow-xs border border-slate-100 space-y-3"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;h2 class="text-sm md:text-base font-bold text-slate-900"&gt;</span><span class="s3">📈</span><span class="s1"> </span><span class="s2">주식</span><span class="s1"> </span><span class="s2">실현손익</span><span class="s1"> &lt;span class="text-[10px] font-medium text-slate-400 ml-0.5"&gt;(</span><span class="s2">연금저축펀드</span><span class="s1"> </span><span class="s2">및</span><span class="s1"> ISA </span><span class="s2">제외</span><span class="s1">)&lt;/span&gt;&lt;/h2&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div class="grid grid-cols-1 sm:grid-cols-3 gap-3"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;div class="bg-emerald-50/50 border border-emerald-100 p-4 rounded-xl flex flex-col justify-center"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;span class="text-[10px] font-bold text-emerald-700 tracking-wide uppercase"&gt;</span><span class="s2">총</span><span class="s1"> </span><span class="s2">누적</span><span class="s1"> </span><span class="s2">실현손익</span><span class="s1">&lt;/span&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;div class="mt-1"&gt;&lt;span id="liveStockCumulative" class="text-lg font-extrabold text-emerald-900"&gt;-&lt;/span&gt;&lt;span class="text-[10px] font-bold text-emerald-800"&gt;</span><span class="s2">원</span><span class="s1">&lt;/span&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div id="stockProfitChart" class="pt-1"&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/section&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;section class="bg-white p-4 md:p-6 rounded-xl shadow-xs border border-slate-100"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div class="flex flex-row items-center justify-between gap-2 mb-4"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;h2 class="text-sm md:text-base font-bold text-slate-900"&gt;</span><span class="s3">👶</span><span class="s1"> </span><span class="s2">강록</span><span class="s1"> </span><span class="s2">자산</span><span class="s1">&lt;/h2&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;div class="flex items-center space-x-1.5"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;select id="grYear" onchange="onGrYearChange(this.value)" class="bg-slate-50 border border-slate-200 text-slate-700 text-[11px] rounded-md p-1.5 font-bold focus:ring-2 focus:ring-blue-500"&gt;&lt;/select&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;select id="grMonth" onchange="onGrMonthChange(this.value)" class="bg-slate-50 border border-slate-200 text-slate-700 text-[11px] rounded-md p-1.5 font-bold focus:ring-2 focus:ring-blue-500"&gt;&lt;/select&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-center bg-slate-50 p-3 rounded-xl border border-slate-100"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;div class="md:col-span-5 border border-slate-200/60 rounded-xl overflow-hidden bg-white shadow-xs"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;table class="w-full text-left text-slate-500 text-[11px]"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;thead class="text-slate-700 uppercase bg-slate-50 border-b border-slate-100"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>&lt;tr&gt;&lt;th class="px-3 py-2"&gt;</span><span class="s2">구성</span><span class="s1"> </span><span class="s2">항목</span><span class="s1">&lt;/th&gt;&lt;th class="px-3 py-2 text-right"&gt;</span><span class="s2">금액</span><span class="s1"> (</span><span class="s2">원</span><span class="s1">)&lt;/th&gt;&lt;/tr&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;/thead&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;tbody class="divide-y divide-slate-100 font-medium"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>&lt;tr&gt;&lt;td class="px-3 py-2 flex items-center gap-1.5 text-slate-900"&gt;&lt;span class="w-2 h-2 rounded-sm bg-[#a855f7]"&gt;&lt;/span&gt;</span><span class="s2">강록</span><span class="s1"> </span><span class="s2">예금</span><span class="s1">&lt;/td&gt;&lt;td id="tblGrDeposit" class="px-3 py-2 text-right text-slate-900 font-bold"&gt;-&lt;/td&gt;&lt;/tr&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>&lt;tr&gt;&lt;td class="px-3 py-2 flex items-center gap-1.5 text-slate-900"&gt;&lt;span class="w-2 h-2 rounded-sm bg-[#ec4899]"&gt;&lt;/span&gt;</span><span class="s2">강록</span><span class="s1"> </span><span class="s2">주식</span><span class="s1"> </span><span class="s2">계좌</span><span class="s1">&lt;/td&gt;&lt;td id="tblGrStock" class="px-3 py-2 text-right text-slate-900 font-bold"&gt;-&lt;/td&gt;&lt;/tr&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>&lt;tr class="bg-slate-50/50 font-bold text-slate-900"&gt;&lt;td class="px-3 py-2 text-slate-800"&gt;</span><span class="s2">강록</span><span class="s1"> </span><span class="s2">자산</span><span class="s1"> </span><span class="s2">총계</span><span class="s1">&lt;/td&gt;&lt;td id="tblGrTotal" class="px-3 py-2 text-right text-blue-600 font-extrabold"&gt;-&lt;/td&gt;&lt;/tr&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;/tbody&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;/table&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;div class="md:col-span-7 flex items-center justify-center min-h-[160px]"&gt;&lt;div id="gangrokPieChart" class="w-full max-w-[280px]"&gt;&lt;/div&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/section&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;script&gt;</span></p>
-<p class="p3"><span class="s4"><span class="Apple-converted-space">        </span>// </span><span class="s3">🔴</span><span class="s4"> </span><span class="s1">아래</span><span class="s4"> </span><span class="s1">큰따옴표</span><span class="s4"> </span><span class="s1">안에</span><span class="s4"> </span><span class="s1">구글</span><span class="s4"> </span><span class="s1">앱스</span><span class="s4"> </span><span class="s1">스크립트에서</span><span class="s4"> </span><span class="s1">배포</span><span class="s4"> </span><span class="s1">후</span><span class="s4"> </span><span class="s1">얻은</span><span class="s4"> </span><span class="s1">웹앱</span><span class="s4"> </span><span class="s1">주소</span><span class="s4">(/exec)</span><span class="s1">를</span><span class="s4"> </span><span class="s1">넣어주세요</span><span class="s4">.</span></p>
-<p class="p3"><span class="s4"><span class="Apple-converted-space">        </span>const GAS_API_URL = "</span><span class="s1">https://script.google.com/macros/s/AKfycbxK7PIKr2P5WwxWqk8Ysfw3NRvWDpmdLF-qe8NEj4D-cNShe-tpyuO7yJgQnSwvYEwMkQ/exec</span><span class="s4">";</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>var globalDashboardData = null; var pieChartObject = null; var trendChart = null; var gangrokPieChart = null;</span></p>
-<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>document.addEventListener("DOMContentLoaded", function() {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// </span><span class="s2">구글</span><span class="s1"> </span><span class="s2">인프라</span><span class="s1"> </span><span class="s2">충돌을</span><span class="s1"> </span><span class="s2">완벽히</span><span class="s1"> </span><span class="s2">피하는</span><span class="s1"> </span><span class="s2">데이터</span><span class="s1"> </span><span class="s2">호출</span><span class="s1"> </span><span class="s2">로직</span><span class="s1">(Fetch)</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>fetch(GAS_API_URL)</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>.then(response =&gt; response.json())</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>.then(data =&gt; {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>onDataLoadSuccess(data);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>})</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>.catch(error =&gt; {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>console.error("</span><span class="s2">데이터</span><span class="s1"> </span><span class="s2">로드</span><span class="s1"> </span><span class="s2">실패</span><span class="s1">:", error);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>alert("</span><span class="s2">데이터를</span><span class="s1"> </span><span class="s2">불러오지</span><span class="s1"> </span><span class="s2">못했습니다</span><span class="s1">. </span><span class="s2">앱스</span><span class="s1"> </span><span class="s2">스크립트</span><span class="s1"> </span><span class="s2">웹앱</span><span class="s1"> </span><span class="s2">링크를</span><span class="s1"> </span><span class="s2">다시</span><span class="s1"> </span><span class="s2">확인해주세요</span><span class="s1">.");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>});</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>});</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function onDataLoadSuccess(data) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (data.status === "error") { return alert("</span><span class="s2">에러</span><span class="s1">: " + data.message); }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>globalDashboardData = data;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById("metricMonths").innerText = data.metrics.totalMonths;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById("metricRate").innerText = data.metrics.monthlyRate;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById("metricIncrement").innerText = data.metrics.avgIncrement.toLocaleString();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById("metricYearlyRate").innerText = data.metrics.yearlyRate;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById("metricYearlyIncrement").innerText = data.metrics.avgYearlyIncrement.toLocaleString();</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>initYearMonthSelectors();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>initGangrokSelectors();</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>renderTrendChart(data.categories, data.estate, data.invest, data.deposit, data.retirement, data.total);</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var timelineContainer = document.getElementById("estateTimelineContainer");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var timelineHtml = "";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>data.estateTimeline.forEach(function(item) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>var isHold = (item.status.trim() === '</span><span class="s2">보유</span><span class="s1"> </span><span class="s2">중</span><span class="s1">');</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>timelineHtml += `&lt;div class="border ${isHold ? 'border-blue-200 ring-2 ring-blue-500/10' : 'border-slate-100'} rounded-xl overflow-hidden bg-white flex flex-col justify-between text-[11px]"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;div class="${isHold ? 'bg-blue-600' : 'bg-slate-900'} p-3 text-white flex justify-between items-center"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;h3 class="font-bold"&gt;${item.name}&lt;/h3&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;span class="text-[10px] bg-white text-slate-900 font-bold px-1.5 py-0.5 rounded-sm"&gt;${item.status}&lt;/span&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;div class="p-3 space-y-2 text-slate-600"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;div class="flex justify-between border-b border-slate-100 pb-1"&gt;&lt;span&gt;</span><span class="s2">기간</span><span class="s1">&lt;/span&gt;&lt;span class="font-semibold text-slate-800"&gt;${item.buyDate} ~ ${item.sellDate}&lt;/span&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;div class="flex justify-between border-b border-slate-100 pb-1"&gt;&lt;span&gt;</span><span class="s2">매수</span><span class="s1">/</span><span class="s2">매도</span><span class="s1">&lt;/span&gt;&lt;span class="font-semibold text-slate-800"&gt;${formatAssetUnit(item.buyAmt / 10000)}</span><span class="s2">원</span><span class="s1"> / ${formatAssetUnit(item.sellAmt / 10000)}</span><span class="s2">원</span><span class="s1">&lt;/span&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;div class="flex justify-between border-b border-slate-100 pb-1"&gt;&lt;span&gt;</span><span class="s2">실투자액</span><span class="s1">&lt;/span&gt;&lt;span class="font-bold text-slate-900"&gt;${item.investAmt.toLocaleString()}</span><span class="s2">원</span><span class="s1">&lt;/span&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;div class="flex justify-between border-b border-slate-100 pb-1 p-1 rounded-md bg-emerald-50/40"&gt;&lt;span class="text-emerald-800 font-bold"&gt;</span><span class="s2">평가손익</span><span class="s1">&lt;/span&gt;&lt;span class="font-extrabold text-emerald-600"&gt;${item.profit.toLocaleString()}</span><span class="s2">원</span><span class="s1">&lt;/span&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;div class="bg-slate-50 px-3 py-2 border-t border-slate-100 grid grid-cols-3 gap-1 text-center text-[10px]"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;div class="border-r border-slate-200"&gt;&lt;p class="text-slate-400"&gt;</span><span class="s2">투자일수</span><span class="s1">&lt;/p&gt;&lt;p class="font-bold text-slate-700"&gt;${item.days}&lt;/p&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;div class="border-r border-slate-200"&gt;&lt;p class="text-slate-400"&gt;</span><span class="s2">수익률</span><span class="s1">&lt;/p&gt;&lt;p class="font-bold text-rose-500"&gt;${item.totalRoi}&lt;/p&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;div&gt;&lt;p class="text-slate-400"&gt;</span><span class="s2">연평균</span><span class="s1">&lt;/p&gt;&lt;p class="font-bold text-rose-500"&gt;${item.yearRoi}&lt;/p&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/div&gt;`;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>});</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>timelineContainer.innerHTML = timelineHtml;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById("liveStockCumulative").innerText = (data.stockTotalCumulative &gt;= 0 ? "+" : "") + data.stockTotalCumulative.toLocaleString();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>renderStockChart(data.stockYears, data.stockProfits);</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById("loadingOverlay").style.display = "none";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function initYearMonthSelectors() {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var records = globalDashboardData.fullMonthlyRecords;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var yearSelect = document.getElementById("filterYear");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var years = Object.keys(records).sort().reverse();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var yearHtml = "";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>years.forEach(function(y) { yearHtml += `&lt;option value="${y}"&gt;${y}</span><span class="s2">년</span><span class="s1">&lt;/option&gt;`; });</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>yearSelect.innerHTML = yearHtml;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>yearSelect.value = globalDashboardData.latest.defaultYear;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>updateMonthSelector(globalDashboardData.latest.defaultYear, globalDashboardData.latest.defaultMonth);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function updateMonthSelector(selectedYear, defaultMonthToSet) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var months = Object.keys(globalDashboardData.fullMonthlyRecords[selectedYear]).sort().reverse();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var monthSelect = document.getElementById("filterMonth");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var monthHtml = "";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>months.forEach(function(m) { monthHtml += `&lt;option value="${m}"&gt;${m}</span><span class="s2">월</span><span class="s1">&lt;/option&gt;`; });</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>monthSelect.innerHTML = monthHtml;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (defaultMonthToSet &amp;&amp; months.indexOf(defaultMonthToSet) !== -1) { monthSelect.value = defaultMonthToSet; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>applySelectedSnapshot(selectedYear, monthSelect.value);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function onYearSelectorChange(year) { updateMonthSelector(year, null); }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function onMonthSelectorChange(month) { var year = document.getElementById("filterYear").value; applySelectedSnapshot(year, month); }</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function applySelectedSnapshot(year, month) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var targetData = globalDashboardData.fullMonthlyRecords[year][month];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if(!targetData) return;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById("liveNetAsset").innerText = targetData.netAssetRaw.toLocaleString();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById("liveDebt").innerText = targetData.debtRaw.toLocaleString();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var diffEl = document.getElementById("liveDiff");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>diffEl.innerText = (targetData.diffRaw &gt;= 0 ? "</span><span class="s2">▲</span><span class="s1"> +" : "</span><span class="s5">▼</span><span class="s1"> ") + targetData.diffRaw.toLocaleString() + "</span><span class="s2">원</span><span class="s1">";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>diffEl.className = targetData.diffRaw &gt;= 0 ? "text-[10px] text-emerald-600 font-bold mt-0.5" : "text-[10px] text-rose-600 font-bold mt-0.5";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById("tblEstate").innerText = targetData.estate.toLocaleString() + " </span><span class="s2">원</span><span class="s1">";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById("tblInvest").innerText = targetData.invest.toLocaleString() + " </span><span class="s2">원</span><span class="s1">";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById("tblDeposit").innerText = targetData.deposit.toLocaleString() + " </span><span class="s2">원</span><span class="s1">";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById("tblRetire").innerText = targetData.retirementAmt.toLocaleString() + " </span><span class="s2">원</span><span class="s1">";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>updatePieChartInstance(targetData.estate, targetData.invest, targetData.deposit, targetData.retirementAmt);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function initGangrokSelectors() {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var grData = globalDashboardData.gangrokMonthly;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var grYearSelect = document.getElementById("grYear");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var years = Object.keys(grData).sort().reverse();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var yearHtml = "";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>years.forEach(function(y) { yearHtml += `&lt;option value="${y}"&gt;${y}</span><span class="s2">년</span><span class="s1">&lt;/option&gt;`; });</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>grYearSelect.innerHTML = yearHtml;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>grYearSelect.value = globalDashboardData.grLatest.year || years[0];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>updateGangrokMonthSelector(grYearSelect.value, globalDashboardData.grLatest.month);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function updateGangrokMonthSelector(selectedYear, defaultMonthToSet) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var months = Object.keys(globalDashboardData.gangrokMonthly[selectedYear]).sort().reverse();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var grMonthSelect = document.getElementById("grMonth");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var monthHtml = "";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>months.forEach(function(m) { monthHtml += `&lt;option value="${m}"&gt;${m}</span><span class="s2">월</span><span class="s1">&lt;/option&gt;`; });</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>grMonthSelect.innerHTML = monthHtml;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (defaultMonthToSet &amp;&amp; months.indexOf(defaultMonthToSet) !== -1) { grMonthSelect.value = defaultMonthToSet; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>applyGangrokSnapshot(selectedYear, grMonthSelect.value);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function onGrYearChange(year) { updateGangrokMonthSelector(year, null); }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function onGrMonthChange(month) { var year = document.getElementById("grYear").value; applyGangrokSnapshot(year, month); }</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function applyGangrokSnapshot(year, month) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>var target = globalDashboardData.gangrokMonthly[year][month];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if(!target) return;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById("tblGrDeposit").innerText = target.cash.toLocaleString() + " </span><span class="s2">원</span><span class="s1">";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById("tblGrStock").innerText = target.stock.toLocaleString() + " </span><span class="s2">원</span><span class="s1">";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById("tblGrTotal").innerText = target.total.toLocaleString() + " </span><span class="s2">원</span><span class="s1">";</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if(!gangrokPieChart) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>gangrokPieChart = new ApexCharts(document.querySelector("#gangrokPieChart"), {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>series: [target.cash, target.stock],</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>chart: { type: 'pie', width: '100%', height: 180, sparkline: { enabled: true } },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>labels: ['</span><span class="s2">강록</span><span class="s1"> </span><span class="s2">예금</span><span class="s1">', '</span><span class="s2">강록</span><span class="s1"> </span><span class="s2">주식</span><span class="s1">'],</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>colors: ['#a855f7', '#ec4899'],</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>dataLabels: { enabled: true, formatter: function (val) { return val.toFixed(1) + "%"; } }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>});</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>gangrokPieChart.render();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>} else {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>gangrokPieChart.updateSeries([target.cash, target.stock]);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function formatAssetUnit(value) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (value &gt;= 10000) { return (value / 10000).toFixed(1) + "</span><span class="s2">억</span><span class="s1">"; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>return value.toLocaleString() + "</span><span class="s2">만</span><span class="s1">";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function renderPieChart(estate, invest, deposit, retire) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>pieChartObject = new ApexCharts(document.querySelector("#pieChart"), {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>series: [estate, invest, deposit, retire],</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>chart: { type: 'pie', width: '100%', height: 180, sparkline: { enabled: true } },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>labels: ['</span><span class="s2">부동산</span><span class="s1">', '</span><span class="s2">주식</span><span class="s1">/</span><span class="s2">코인</span><span class="s1">', '</span><span class="s2">예적금</span><span class="s1">', '</span><span class="s2">노후자금</span><span class="s1">'],</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>colors: ['#3b82f6', '#f59e0b', '#10b981', '#64748b'],</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>legend: { show: false },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>dataLabels: { enabled: true, formatter: function (val) { return val.toFixed(1) + "%"; } }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>});</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>pieChartObject.render();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function updatePieChartInstance(estate, invest, deposit, retire) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if(!pieChartObject) { renderPieChart(estate, invest, deposit, retire); }<span class="Apple-converted-space"> </span></span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>else { pieChartObject.updateSeries([estate, invest, deposit, retire]); }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function renderTrendChart(categories, estate, invest, deposit, retirement, total) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>trendChart = new ApexCharts(document.querySelector("#trendChart"), {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>series: [</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>{ name: '</span><span class="s2">부동산</span><span class="s1">', type: 'column', data: estate },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>{ name: '</span><span class="s2">주식</span><span class="s1">/</span><span class="s2">코인</span><span class="s1">', type: 'column', data: invest },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>{ name: '</span><span class="s2">예적금</span><span class="s1">', type: 'column', data: deposit },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>{ name: '</span><span class="s2">노후자금</span><span class="s1">', type: 'column', data: retirement },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>{ name: '</span><span class="s2">총</span><span class="s1"> </span><span class="s2">순자산</span><span class="s1">', type: 'line', data: total }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>],</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>chart: { height: 350, type: 'line', stacked: true, toolbar: { show: false }, zoom: { enabled: false } },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>stroke: { width: [0, 0, 0, 0, 3.5], curve: 'smooth' },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>colors: ['#3b82f6', '#f59e0b', '#10b981', '#64748b', '#10b981'],</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>labels: categories,</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>dataLabels: {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>enabled: true, enabledOnSeries: [4],</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>style: { fontSize: '9px', fontWeight: 700, colors: ['#475569'] },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>background: { enabled: true, foreColor: '#fff', padding: 3, borderRadius: 3, opacity: 0.95 },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>formatter: function(val) { return formatAssetUnit(val); }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>},</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>xaxis: { labels: { style: { fontSize: '9px' } } },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>yaxis: { min: 0, forceNiceScale: true, labels: { style: { fontSize: '9px' }, formatter: function (value) { return formatAssetUnit(value) + "</span><span class="s2">원</span><span class="s1">"; } } },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>tooltip: { shared: true, intersect: false }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>});</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>trendChart.render();<span class="Apple-converted-space"> </span></span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function renderStockChart(years, profits) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>new ApexCharts(document.querySelector("#stockProfitChart"), {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>series: [{ name: '</span><span class="s2">연도별</span><span class="s1"> </span><span class="s2">실현손익</span><span class="s1">', data: profits }],</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>chart: { type: 'area', height: 240, toolbar: { show: false } },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>colors: ['#10b981'],</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>stroke: { curve: 'smooth', width: 2.5 },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 90, 100] } },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>dataLabels: {<span class="Apple-converted-space"> </span></span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>enabled: true,<span class="Apple-converted-space"> </span></span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>formatter: function (val) { return (val &gt;= 0 ? "+" : "") + val.toLocaleString() + "</span><span class="s2">만</span><span class="s1">"; },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>style: {<span class="Apple-converted-space"> </span></span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>fontSize: '10px',<span class="Apple-converted-space"> </span></span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>fontWeight: 'bold',</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>colors: [function({ value }) { if (value &lt; 0) return '#ef4444'; return '#047857'; }]</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>},</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>markers: {<span class="Apple-converted-space"> </span></span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>size: 4,<span class="Apple-converted-space"> </span></span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>colors: [function({ value }) { if (value &lt; 0) return '#ef4444'; return '#10b981'; }],</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>strokeColors: '#fff', strokeWidth: 1.5</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>},</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>xaxis: { categories: years, labels: { style: { fontSize: '9px' } } },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>yaxis: { labels: { style: { fontSize: '9px' }, formatter: function (v) { return v.toLocaleString() + "</span><span class="s2">만</span><span class="s1">"; } } }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}).render();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/body&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/html&gt;</span></p>
+<body class="bg-slate-50 text-slate-800 antialiased p-3 md:p-8">
+
+    <div id="loadingOverlay" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-4 text-center">
+        <div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-200 h-10 w-10 mb-3"></div>
+        <p class="text-xs font-semibold text-slate-600">자산 포트폴리오 안전 연결 중...</p>
+    </div>
+
+    <div class="max-w-7xl mx-auto space-y-5">
+        <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-3">
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold tracking-tight text-slate-900">통합 자산 관리 대시보드</h1>
+                <p class="text-[11px] text-slate-500 mt-0.5">경훈 · 인희 · 강록 가족의 실시간 자산 트래킹 시스템</p>
+            </div>
+        </header>
+
+        <section class="bg-white p-4 md:p-6 rounded-xl shadow-xs border border-slate-100">
+            <div class="flex flex-row items-center justify-between gap-2 mb-4">
+                <h2 class="text-sm md:text-base font-bold text-slate-900">📊 자산 현황 및 세부 구성</h2>
+                <div class="flex items-center space-x-1.5">
+                    <select id="filterYear" onchange="onYearSelectorChange(this.value)" class="bg-slate-50 border border-slate-200 text-slate-700 text-[11px] rounded-md p-1.5 font-bold focus:ring-2 focus:ring-blue-500"></select>
+                    <select id="filterMonth" onchange="onMonthSelectorChange(this.value)" class="bg-slate-50 border border-slate-200 text-slate-700 text-[11px] rounded-md p-1.5 font-bold focus:ring-2 focus:ring-blue-500"></select>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                <div class="grid grid-cols-2 lg:grid-cols-1 lg:col-span-3 gap-3">
+                    <div class="bg-emerald-50/40 border border-emerald-100 p-3.5 rounded-xl">
+                        <span class="text-[10px] font-semibold text-emerald-700 uppercase tracking-wider">총 순자산</span>
+                        <div class="mt-0.5"><span id="liveNetAsset" class="text-base md:text-lg font-extrabold text-emerald-900">-</span><span class="text-[10px] font-bold text-emerald-800"> 원</span></div>
+                        <p id="liveDiff" class="text-[9px] font-semibold mt-0.5 text-slate-400">계산 중...</p>
+                    </div>
+                    <div class="bg-rose-50/40 border border-rose-100 p-3.5 rounded-xl">
+                        <span class="text-[10px] font-semibold text-rose-700 uppercase tracking-wider">총 부채 잔액</span>
+                        <div class="mt-0.5"><span id="liveDebt" class="text-base md:text-lg font-extrabold text-rose-900">-</span><span class="text-[10px] font-bold text-rose-800"> 원</span></div>
+                    </div>
+                </div>
+                <div class="lg:col-span-4 bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center justify-center min-h-[180px]">
+                    <div id="pieChart" class="w-full"></div>
+                </div>
+                <div class="lg:col-span-5 border border-slate-100 rounded-xl overflow-hidden bg-white shadow-xs">
+                    <table class="w-full text-left text-slate-500 text-[11px]">
+                        <thead class="text-slate-700 uppercase bg-slate-50 border-b border-slate-100">
+                            <tr><th class="px-3 py-2">구성 항목</th><th class="px-3 py-2 text-right">금액 (원)</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-medium">
+                            <tr><td class="px-3 py-2 flex items-center gap-1.5 text-slate-900"><span class="w-2 h-2 rounded-sm bg-[#3b82f6]"></span>부동산(주담대 제외)</td><td id="tblEstate" class="px-3 py-2 text-right text-slate-900 font-bold">-</td></tr>
+                            <tr><td class="px-3 py-2 flex items-center gap-1.5 text-slate-900"><span class="w-2 h-2 rounded-sm bg-[#f59e0b]"></span>주식 / 코인 투자자산</td><td id="tblInvest" class="px-3 py-2 text-right text-slate-900 font-bold">-</td></tr>
+                            <tr><td class="px-3 py-2 flex items-center gap-1.5 text-slate-900"><span class="w-2 h-2 rounded-sm bg-[#10b981]"></span>안전 예적금 자산</td><td id="tblDeposit" class="px-3 py-2 text-right text-slate-900 font-bold">-</td></tr>
+                            <tr><td class="px-3 py-2 flex items-center gap-1.5 text-slate-900"><span class="w-2 h-2 rounded-sm bg-[#64748b]"></span>장기 노후자금</td><td id="tblRetire" class="px-3 py-2 text-right text-slate-900 font-bold">-</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white p-4 md:p-6 rounded-xl shadow-xs border border-slate-100 space-y-4">
+            <h2 class="text-sm md:text-base font-bold text-slate-900">📈 월별 자산 성장 추이</h2>
+
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-2.5">
+                <div class="bg-slate-50 border border-slate-100 p-2.5 rounded-lg flex flex-col justify-center col-span-2 md:col-span-1">
+                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">누적 기록 기간</span>
+                    <div class="mt-0.5 flex items-baseline gap-0.5"><span id="metricMonths" class="text-sm font-extrabold text-slate-900">-</span><span class="text-[10px] font-bold text-slate-600">개월</span></div>
+                </div>
+                <div class="bg-indigo-50/40 border border-indigo-100 p-2.5 rounded-lg flex flex-col justify-center">
+                    <span class="text-[9px] font-bold text-indigo-700 uppercase tracking-wider">월 평균 수익률</span>
+                    <div class="mt-0.5 flex items-baseline gap-0.5"><span id="metricRate" class="text-sm font-extrabold text-indigo-900">-</span><span class="text-[10px] font-bold text-indigo-800">%</span></div>
+                </div>
+                <div class="bg-emerald-50/40 border border-emerald-100 p-2.5 rounded-lg flex flex-col justify-center">
+                    <span class="text-[9px] font-bold text-emerald-700 uppercase tracking-wider">월 평균 증가액</span>
+                    <div class="mt-0.5 flex items-baseline gap-0.5"><span id="metricIncrement" class="text-sm font-extrabold text-emerald-900">-</span><span class="text-[10px] font-bold text-emerald-800">원</span></div>
+                </div>
+                <div class="bg-violet-50/40 border border-violet-100 p-2.5 rounded-lg flex flex-col justify-center">
+                    <span class="text-[9px] font-bold text-violet-700 uppercase tracking-wider">연 평균 수익률</span>
+                    <div class="mt-0.5 flex items-baseline gap-0.5"><span id="metricYearlyRate" class="text-sm font-extrabold text-violet-900">-</span><span class="text-[10px] font-bold text-violet-800">%</span></div>
+                </div>
+                <div class="bg-teal-50/40 border border-teal-100 p-2.5 rounded-lg flex flex-col justify-center">
+                    <span class="text-[9px] font-bold text-teal-700 uppercase tracking-wider">연 평균 증가액</span>
+                    <div class="mt-0.5 flex items-baseline gap-0.5"><span id="metricYearlyIncrement" class="text-sm font-extrabold text-teal-900">-</span><span class="text-[10px] font-bold text-teal-800">원</span></div>
+                </div>
+            </div>
+
+            <div id="trendChart" class="pt-1"></div>
+        </section>
+
+        <section class="bg-white p-4 md:p-6 rounded-xl shadow-xs border border-slate-100">
+            <h2 class="text-sm md:text-base font-bold text-slate-900 mb-4">🏠 아파트 매수매도 히스토리</h2>
+            <div id="estateTimelineContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </section>
+
+        <section class="bg-white p-4 md:p-6 rounded-xl shadow-xs border border-slate-100 space-y-3">
+            <h2 class="text-sm md:text-base font-bold text-slate-900">📈 주식 실현손익 <span class="text-[10px] font-medium text-slate-400 ml-0.5">(연금저축펀드 및 ISA 제외)</span></h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="bg-emerald-50/50 border border-emerald-100 p-4 rounded-xl flex flex-col justify-center">
+                    <span class="text-[10px] font-bold text-emerald-700 tracking-wide uppercase">총 누적 실현손익</span>
+                    <div class="mt-1"><span id="liveStockCumulative" class="text-lg font-extrabold text-emerald-900">-</span><span class="text-[10px] font-bold text-emerald-800">원</span></div>
+                </div>
+            </div>
+            <div id="stockProfitChart" class="pt-1"></div>
+        </section>
+
+        <section class="bg-white p-4 md:p-6 rounded-xl shadow-xs border border-slate-100">
+            <div class="flex flex-row items-center justify-between gap-2 mb-4">
+                <h2 class="text-sm md:text-base font-bold text-slate-900">👶 강록 자산</h2>
+                <div class="flex items-center space-x-1.5">
+                    <select id="grYear" onchange="onGrYearChange(this.value)" class="bg-slate-50 border border-slate-200 text-slate-700 text-[11px] rounded-md p-1.5 font-bold focus:ring-2 focus:ring-blue-500"></select>
+                    <select id="grMonth" onchange="onGrMonthChange(this.value)" class="bg-slate-50 border border-slate-200 text-slate-700 text-[11px] rounded-md p-1.5 font-bold focus:ring-2 focus:ring-blue-500"></select>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <div class="md:col-span-5 border border-slate-200/60 rounded-xl overflow-hidden bg-white shadow-xs">
+                    <table class="w-full text-left text-slate-500 text-[11px]">
+                        <thead class="text-slate-700 uppercase bg-slate-50 border-b border-slate-100">
+                            <tr><th class="px-3 py-2">구성 항목</th><th class="px-3 py-2 text-right">금액 (원)</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-medium">
+                            <tr><td class="px-3 py-2 flex items-center gap-1.5 text-slate-900"><span class="w-2 h-2 rounded-sm bg-[#a855f7]"></span>강록 예금</td><td id="tblGrDeposit" class="px-3 py-2 text-right text-slate-900 font-bold">-</td></tr>
+                            <tr><td class="px-3 py-2 flex items-center gap-1.5 text-slate-900"><span class="w-2 h-2 rounded-sm bg-[#ec4899]"></span>강록 주식 계좌</td><td id="tblGrStock" class="px-3 py-2 text-right text-slate-900 font-bold">-</td></tr>
+                            <tr class="bg-slate-50/50 font-bold text-slate-900"><td class="px-3 py-2 text-slate-800">강록 자산 총계</td><td id="tblGrTotal" class="px-3 py-2 text-right text-blue-600 font-extrabold">-</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="md:col-span-7 flex items-center justify-center min-h-[160px]"><div id="gangrokPieChart" class="w-full max-w-[280px]"></div></div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // 🔴 아래 큰따옴표 안에 구글 앱스 스크립트에서 배포 후 얻은 웹앱 주소(/exec)를 넣어주세요.
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxK7PIKr2P5WwxWqk8Ysfw3NRvWDpmdLF-qe8NEj4D-cNShe-tpyuO7yJgQnSwvYEwMkQ/exec";
+
+        var globalDashboardData = null; var pieChartObject = null; var trendChart = null; var gangrokPieChart = null;
+        
+        document.addEventListener("DOMContentLoaded", function() {
+            // 구글 인프라 충돌을 완벽히 피하는 데이터 호출 로직(Fetch)
+            fetch(GAS_API_URL)
+                .then(response => response.json())
+                .then(data => {
+                    onDataLoadSuccess(data);
+                })
+                .catch(error => {
+                    console.error("데이터 로드 실패:", error);
+                    alert("데이터를 불러오지 못했습니다. 앱스 스크립트 웹앱 링크를 다시 확인해주세요.");
+                });
+        });
+
+        function onDataLoadSuccess(data) {
+            if (data.status === "error") { return alert("에러: " + data.message); }
+            globalDashboardData = data;
+
+            document.getElementById("metricMonths").innerText = data.metrics.totalMonths;
+            document.getElementById("metricRate").innerText = data.metrics.monthlyRate;
+            document.getElementById("metricIncrement").innerText = data.metrics.avgIncrement.toLocaleString();
+            document.getElementById("metricYearlyRate").innerText = data.metrics.yearlyRate;
+            document.getElementById("metricYearlyIncrement").innerText = data.metrics.avgYearlyIncrement.toLocaleString();
+
+            initYearMonthSelectors();
+            initGangrokSelectors();
+
+            renderTrendChart(data.categories, data.estate, data.invest, data.deposit, data.retirement, data.total);
+
+            var timelineContainer = document.getElementById("estateTimelineContainer");
+            var timelineHtml = "";
+            data.estateTimeline.forEach(function(item) {
+                var isHold = (item.status.trim() === '보유 중');
+                timelineHtml += `<div class="border ${isHold ? 'border-blue-200 ring-2 ring-blue-500/10' : 'border-slate-100'} rounded-xl overflow-hidden bg-white flex flex-col justify-between text-[11px]">
+                    <div class="${isHold ? 'bg-blue-600' : 'bg-slate-900'} p-3 text-white flex justify-between items-center">
+                        <h3 class="font-bold">${item.name}</h3>
+                        <span class="text-[10px] bg-white text-slate-900 font-bold px-1.5 py-0.5 rounded-sm">${item.status}</span>
+                    </div>
+                    <div class="p-3 space-y-2 text-slate-600">
+                        <div class="flex justify-between border-b border-slate-100 pb-1"><span>기간</span><span class="font-semibold text-slate-800">${item.buyDate} ~ ${item.sellDate}</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1"><span>매수/매도</span><span class="font-semibold text-slate-800">${formatAssetUnit(item.buyAmt / 10000)}원 / ${formatAssetUnit(item.sellAmt / 10000)}원</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1"><span>실투자액</span><span class="font-bold text-slate-900">${item.investAmt.toLocaleString()}원</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1 p-1 rounded-md bg-emerald-50/40"><span class="text-emerald-800 font-bold">평가손익</span><span class="font-extrabold text-emerald-600">${item.profit.toLocaleString()}원</span></div>
+                    </div>
+                    <div class="bg-slate-50 px-3 py-2 border-t border-slate-100 grid grid-cols-3 gap-1 text-center text-[10px]">
+                        <div class="border-r border-slate-200"><p class="text-slate-400">투자일수</p><p class="font-bold text-slate-700">${item.days}</p></div>
+                        <div class="border-r border-slate-200"><p class="text-slate-400">수익률</p><p class="font-bold text-rose-500">${item.totalRoi}</p></div>
+                        <div><p class="text-slate-400">연평균</p><p class="font-bold text-rose-500">${item.yearRoi}</p></div>
+                    </div>
+                </div>`;
+            });
+            timelineContainer.innerHTML = timelineHtml;
+
+            document.getElementById("liveStockCumulative").innerText = (data.stockTotalCumulative >= 0 ? "+" : "") + data.stockTotalCumulative.toLocaleString();
+            renderStockChart(data.stockYears, data.stockProfits);
+
+            document.getElementById("loadingOverlay").style.display = "none";
+        }
+
+        function initYearMonthSelectors() {
+            var records = globalDashboardData.fullMonthlyRecords;
+            var yearSelect = document.getElementById("filterYear");
+            var years = Object.keys(records).sort().reverse();
+            var yearHtml = "";
+            years.forEach(function(y) { yearHtml += `<option value="${y}">${y}년</option>`; });
+            yearSelect.innerHTML = yearHtml;
+            yearSelect.value = globalDashboardData.latest.defaultYear;
+            updateMonthSelector(globalDashboardData.latest.defaultYear, globalDashboardData.latest.defaultMonth);
+        }
+
+        function updateMonthSelector(selectedYear, defaultMonthToSet) {
+            var months = Object.keys(globalDashboardData.fullMonthlyRecords[selectedYear]).sort().reverse();
+            var monthSelect = document.getElementById("filterMonth");
+            var monthHtml = "";
+            months.forEach(function(m) { monthHtml += `<option value="${m}">${m}월</option>`; });
+            monthSelect.innerHTML = monthHtml;
+            if (defaultMonthToSet && months.indexOf(defaultMonthToSet) !== -1) { monthSelect.value = defaultMonthToSet; }
+            applySelectedSnapshot(selectedYear, monthSelect.value);
+        }
+
+        function onYearSelectorChange(year) { updateMonthSelector(year, null); }
+        function onMonthSelectorChange(month) { var year = document.getElementById("filterYear").value; applySelectedSnapshot(year, month); }
+
+        function applySelectedSnapshot(year, month) {
+            var targetData = globalDashboardData.fullMonthlyRecords[year][month];
+            if(!targetData) return;
+            document.getElementById("liveNetAsset").innerText = targetData.netAssetRaw.toLocaleString();
+            document.getElementById("liveDebt").innerText = targetData.debtRaw.toLocaleString();
+            var diffEl = document.getElementById("liveDiff");
+            diffEl.innerText = (targetData.diffRaw >= 0 ? "▲ +" : "▼ ") + targetData.diffRaw.toLocaleString() + "원";
+            diffEl.className = targetData.diffRaw >= 0 ? "text-[10px] text-emerald-600 font-bold mt-0.5" : "text-[10px] text-rose-600 font-bold mt-0.5";
+            document.getElementById("tblEstate").innerText = targetData.estate.toLocaleString() + " 원";
+            document.getElementById("tblInvest").innerText = targetData.invest.toLocaleString() + " 원";
+            document.getElementById("tblDeposit").innerText = targetData.deposit.toLocaleString() + " 원";
+            document.getElementById("tblRetire").innerText = targetData.retirementAmt.toLocaleString() + " 원";
+            updatePieChartInstance(targetData.estate, targetData.invest, targetData.deposit, targetData.retirementAmt);
+        }
+
+        function initGangrokSelectors() {
+            var grData = globalDashboardData.gangrokMonthly;
+            var grYearSelect = document.getElementById("grYear");
+            var years = Object.keys(grData).sort().reverse();
+            var yearHtml = "";
+            years.forEach(function(y) { yearHtml += `<option value="${y}">${y}년</option>`; });
+            grYearSelect.innerHTML = yearHtml;
+            grYearSelect.value = globalDashboardData.grLatest.year || years[0];
+            updateGangrokMonthSelector(grYearSelect.value, globalDashboardData.grLatest.month);
+        }
+
+        function updateGangrokMonthSelector(selectedYear, defaultMonthToSet) {
+            var months = Object.keys(globalDashboardData.gangrokMonthly[selectedYear]).sort().reverse();
+            var grMonthSelect = document.getElementById("grMonth");
+            var monthHtml = "";
+            months.forEach(function(m) { monthHtml += `<option value="${m}">${m}월</option>`; });
+            grMonthSelect.innerHTML = monthHtml;
+            if (defaultMonthToSet && months.indexOf(defaultMonthToSet) !== -1) { grMonthSelect.value = defaultMonthToSet; }
+            applyGangrokSnapshot(selectedYear, grMonthSelect.value);
+        }
+
+        function onGrYearChange(year) { updateGangrokMonthSelector(year, null); }
+        function onGrMonthChange(month) { var year = document.getElementById("grYear").value; applyGangrokSnapshot(year, month); }
+
+        function applyGangrokSnapshot(year, month) {
+            var target = globalDashboardData.gangrokMonthly[year][month];
+            if(!target) return;
+            document.getElementById("tblGrDeposit").innerText = target.cash.toLocaleString() + " 원";
+            document.getElementById("tblGrStock").innerText = target.stock.toLocaleString() + " 원";
+            document.getElementById("tblGrTotal").innerText = target.total.toLocaleString() + " 원";
+
+            if(!gangrokPieChart) {
+                gangrokPieChart = new ApexCharts(document.querySelector("#gangrokPieChart"), {
+                    series: [target.cash, target.stock],
+                    chart: { type: 'pie', width: '100%', height: 180, sparkline: { enabled: true } },
+                    labels: ['강록 예금', '강록 주식'],
+                    colors: ['#a855f7', '#ec4899'],
+                    dataLabels: { enabled: true, formatter: function (val) { return val.toFixed(1) + "%"; } }
+                });
+                gangrokPieChart.render();
+            } else {
+                gangrokPieChart.updateSeries([target.cash, target.stock]);
+            }
+        }
+
+        function formatAssetUnit(value) {
+            if (value >= 10000) { return (value / 10000).toFixed(1) + "억"; }
+            return value.toLocaleString() + "만";
+        }
+
+        function renderPieChart(estate, invest, deposit, retire) {
+            pieChartObject = new ApexCharts(document.querySelector("#pieChart"), {
+                series: [estate, invest, deposit, retire],
+                chart: { type: 'pie', width: '100%', height: 180, sparkline: { enabled: true } },
+                labels: ['부동산', '주식/코인', '예적금', '노후자금'],
+                colors: ['#3b82f6', '#f59e0b', '#10b981', '#64748b'],
+                legend: { show: false },
+                dataLabels: { enabled: true, formatter: function (val) { return val.toFixed(1) + "%"; } }
+            });
+            pieChartObject.render();
+        }
+
+        function updatePieChartInstance(estate, invest, deposit, retire) {
+            if(!pieChartObject) { renderPieChart(estate, invest, deposit, retire); } 
+            else { pieChartObject.updateSeries([estate, invest, deposit, retire]); }
+        }
+
+        function renderTrendChart(categories, estate, invest, deposit, retirement, total) {
+            trendChart = new ApexCharts(document.querySelector("#trendChart"), {
+                series: [
+                    { name: '부동산', type: 'column', data: estate },
+                    { name: '주식/코인', type: 'column', data: invest },
+                    { name: '예적금', type: 'column', data: deposit },
+                    { name: '노후자금', type: 'column', data: retirement },
+                    { name: '총 순자산', type: 'line', data: total }
+                ],
+                chart: { height: 350, type: 'line', stacked: true, toolbar: { show: false }, zoom: { enabled: false } },
+                stroke: { width: [0, 0, 0, 0, 3.5], curve: 'smooth' },
+                colors: ['#3b82f6', '#f59e0b', '#10b981', '#64748b', '#10b981'],
+                labels: categories,
+                dataLabels: {
+                    enabled: true, enabledOnSeries: [4],
+                    style: { fontSize: '9px', fontWeight: 700, colors: ['#475569'] },
+                    background: { enabled: true, foreColor: '#fff', padding: 3, borderRadius: 3, opacity: 0.95 },
+                    formatter: function(val) { return formatAssetUnit(val); }
+                },
+                xaxis: { labels: { style: { fontSize: '9px' } } },
+                yaxis: { min: 0, forceNiceScale: true, labels: { style: { fontSize: '9px' }, formatter: function (value) { return formatAssetUnit(value) + "원"; } } },
+                tooltip: { shared: true, intersect: false }
+            });
+            trendChart.render(); 
+        }
+
+        function renderStockChart(years, profits) {
+            new ApexCharts(document.querySelector("#stockProfitChart"), {
+                series: [{ name: '연도별 실현손익', data: profits }],
+                chart: { type: 'area', height: 240, toolbar: { show: false } },
+                colors: ['#10b981'],
+                stroke: { curve: 'smooth', width: 2.5 },
+                fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 90, 100] } },
+                dataLabels: { 
+                    enabled: true, 
+                    formatter: function (val) { return (val >= 0 ? "+" : "") + val.toLocaleString() + "만"; },
+                    style: { 
+                        fontSize: '10px', 
+                        fontWeight: 'bold',
+                        colors: [function({ value }) { if (value < 0) return '#ef4444'; return '#047857'; }]
+                    }
+                },
+                markers: { 
+                    size: 4, 
+                    colors: [function({ value }) { if (value < 0) return '#ef4444'; return '#10b981'; }],
+                    strokeColors: '#fff', strokeWidth: 1.5
+                },
+                xaxis: { categories: years, labels: { style: { fontSize: '9px' } } },
+                yaxis: { labels: { style: { fontSize: '9px' }, formatter: function (v) { return v.toLocaleString() + "만"; } } }
+            }).render();
+        }
+    </script>
 </body>
 </html>
