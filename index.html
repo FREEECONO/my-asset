@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>통합 자산 관리 대시보드</title>
+    <!-- 안정적인 모바일 호환을 위해 Tailwind v3 CDN 사용 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <style>
@@ -27,6 +28,39 @@
                 <p class="text-[11px] text-slate-500 mt-0.5">경훈 · 인희 · 강록 가족의 실시간 자산 트래킹 시스템</p>
             </div>
         </header>
+
+        <!-- 💡 자산 성장 기여도 분석 섹션 -->
+        <section class="bg-white p-4 md:p-6 rounded-xl shadow-xs border border-slate-100">
+            <h2 class="text-sm md:text-base font-bold text-slate-900 mb-4">💡 자산 성장 기여도 분석 <span class="text-[10px] font-medium text-slate-400 ml-0.5">(첫 기록일 대비 누적)</span></h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl flex flex-col justify-center">
+                    <span class="text-[10px] font-bold text-slate-500 tracking-wide uppercase">총 순자산 증가액</span>
+                    <div class="mt-1"><span id="liveTotalIncrease" class="text-lg md:text-xl font-extrabold text-slate-800">-</span><span class="text-[10px] font-bold text-slate-600 ml-0.5">원</span></div>
+                </div>
+                <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl flex flex-col justify-center relative overflow-hidden">
+                    <div class="absolute right-0 top-0 h-full w-1.5 bg-blue-400"></div>
+                    <span class="text-[10px] font-bold text-blue-700 tracking-wide uppercase">부동산 수익 (실현+평가)</span>
+                    <div class="mt-1 flex items-baseline gap-1">
+                        <span id="liveEstateProfit" class="text-lg md:text-xl font-extrabold text-blue-900">-</span><span class="text-[10px] font-bold text-blue-800">원</span>
+                        <span id="ratioEstate" class="ml-2 text-[10px] font-bold text-blue-500 bg-blue-100 px-1.5 py-0.5 rounded-sm">-%</span>
+                    </div>
+                </div>
+                <div class="bg-emerald-50/50 border border-emerald-100 p-4 rounded-xl flex flex-col justify-center relative overflow-hidden">
+                    <div class="absolute right-0 top-0 h-full w-1.5 bg-emerald-400"></div>
+                    <span class="text-[10px] font-bold text-emerald-700 tracking-wide uppercase">순수 저축 및 금융투자 수익</span>
+                    <div class="mt-1 flex items-baseline gap-1">
+                        <span id="liveFinancialIncrease" class="text-lg md:text-xl font-extrabold text-emerald-900">-</span><span class="text-[10px] font-bold text-emerald-800">원</span>
+                        <span id="ratioFinance" class="ml-2 text-[10px] font-bold text-emerald-500 bg-emerald-100 px-1.5 py-0.5 rounded-sm">-%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 기여도 프로그레스 바 -->
+            <div class="mt-4 flex h-3 w-full overflow-hidden rounded-full bg-slate-100">
+                <div id="barEstate" class="bg-blue-500 flex flex-col justify-center overflow-hidden text-center text-xs text-white transition-all duration-1000" role="progressbar" style="width: 0%;"></div>
+                <div id="barFinance" class="bg-emerald-400 flex flex-col justify-center overflow-hidden text-center text-xs text-white transition-all duration-1000" role="progressbar" style="width: 0%;"></div>
+            </div>
+        </section>
 
         <section class="bg-white p-4 md:p-6 rounded-xl shadow-xs border border-slate-100">
             <div class="flex flex-row items-center justify-between gap-2 mb-4">
@@ -140,13 +174,12 @@
     </div>
 
     <script>
-        // 🔴 아래 큰따옴표 안에 구글 앱스 스크립트에서 배포 후 얻은 웹앱 주소(/exec)를 넣어주세요.
+        // ✅ 요청하신 URL이 정확히 반영되었습니다!
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzep-x8EIv4VHT2cQFg0AAPwKhoK8oljupTu6FHoS14V-KnZ18e38ffrC2lVoflTHjXZw/exec";
 
         var globalDashboardData = null; var pieChartObject = null; var trendChart = null; var gangrokPieChart = null;
         
         document.addEventListener("DOMContentLoaded", function() {
-            // 구글 인프라 충돌을 완벽히 피하는 데이터 호출 로직(Fetch)
             fetch(GAS_API_URL)
                 .then(response => response.json())
                 .then(data => {
@@ -161,6 +194,40 @@
         function onDataLoadSuccess(data) {
             if (data.status === "error") { return alert("에러: " + data.message); }
             globalDashboardData = data;
+
+            // --- 💡 [새로운 기능] 기여도 분석 수식 처리 ---
+            var years = Object.keys(data.fullMonthlyRecords).sort();
+            var firstYear = years[0];
+            var firstMonth = Object.keys(data.fullMonthlyRecords[firstYear]).sort()[0];
+            var startNetAsset = data.fullMonthlyRecords[firstYear][firstMonth].netAssetRaw;
+            var endNetAsset = data.latest.netAssetRaw;
+            
+            var totalAssetIncrease = endNetAsset - startNetAsset;
+            
+            var totalEstateProfit = 0;
+            if(data.estateTimeline && data.estateTimeline.length > 0) {
+                data.estateTimeline.forEach(function(item) { totalEstateProfit += item.profit; });
+            }
+            
+            var financialAndSavingsIncrease = totalAssetIncrease - totalEstateProfit;
+
+            document.getElementById("liveTotalIncrease").innerText = (totalAssetIncrease > 0 ? "+" : "") + totalAssetIncrease.toLocaleString();
+            document.getElementById("liveEstateProfit").innerText = (totalEstateProfit > 0 ? "+" : "") + totalEstateProfit.toLocaleString();
+            document.getElementById("liveFinancialIncrease").innerText = (financialAndSavingsIncrease > 0 ? "+" : "") + financialAndSavingsIncrease.toLocaleString();
+
+            if (totalAssetIncrease > 0) {
+                var estateRatio = Math.max(0, (totalEstateProfit / totalAssetIncrease) * 100);
+                var financeRatio = Math.max(0, (financialAndSavingsIncrease / totalAssetIncrease) * 100);
+                
+                document.getElementById("ratioEstate").innerText = estateRatio.toFixed(1) + "%";
+                document.getElementById("ratioFinance").innerText = financeRatio.toFixed(1) + "%";
+                
+                setTimeout(function() {
+                    document.getElementById("barEstate").style.width = estateRatio + "%";
+                    document.getElementById("barFinance").style.width = financeRatio + "%";
+                }, 300); // 부드러운 애니메이션 효과
+            }
+            // ---------------------------------------------
 
             document.getElementById("metricMonths").innerText = data.metrics.totalMonths;
             document.getElementById("metricRate").innerText = data.metrics.monthlyRate;
@@ -335,15 +402,16 @@
             trendChart.render(); 
         }
 
-function renderStockChart(years, profits) {
+        // 줌/드래그가 차단된 고정형 주식 차트
+        function renderStockChart(years, profits) {
             new ApexCharts(document.querySelector("#stockProfitChart"), {
                 series: [{ name: '연도별 실현손익', data: profits }],
                 chart: { 
                     type: 'area', 
                     height: 240, 
                     toolbar: { show: false },
-                    zoom: { enabled: false },      // 확대 기능 끄기
-                    selection: { enabled: false }  // 드래그 영역 지정 끄기
+                    zoom: { enabled: false },
+                    selection: { enabled: false }
                 },
                 colors: ['#10b981'],
                 stroke: { curve: 'smooth', width: 2.5 },
