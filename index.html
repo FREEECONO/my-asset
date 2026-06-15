@@ -1,3 +1,52 @@
+말씀하신 대로 **'연금저축 미실현손익'을 '연금저축+ISA 미실현손익'으로 확장**하는 로직을 반영하겠습니다. 지정해주신 대로 `(O열+Q열) - (AB열+AC열)` 수식이 정확히 작동하도록 백엔드를 수정하고, 기존의 부동산 복비/세금 UI 반영까지 모두 포함된 **프론트엔드(깃허브) 전체 코드**를 제공해 드립니다.
+
+---
+
+### 1. 🛠️ 구글 앱스 스크립트(GAS) 로직 수정 부분
+
+앱스 스크립트 편집기에서 `getLiveDashboardData()` 함수 하단에 위치한 **역순 탐색 연금저축 추출 로직**을 아래와 같이 변경해 주세요. (변수명은 프론트엔드 호환성을 위해 `pensionProfit`으로 유지하되, 내부에서 ISA까지 합산되도록 구성했습니다.)
+
+```javascript
+    // 역순 탐색으로 정확한 최신 연금저축+ISA 평가액 추출
+    var pensionIsaEval = 0;
+    var pensionIsaPrinc = 0;
+    for (var i = assetValues.length - 1; i >= 3; i--) {
+      var isaEval = parseNum(assetValues[i][14]);      // O열: ISA 평가액
+      var pensionEval = parseNum(assetValues[i][16]);  // Q열: 연금저축 평가액
+      var pensionPrinc = parseNum(assetValues[i][27]); // AB열: 연금저축 원금
+      var isaPrinc = parseNum(assetValues[i][28]);     // AC열: ISA 원금
+      
+      // 데이터가 하나라도 입력된 최신 행을 찾음
+      if (isaEval !== 0 || pensionEval !== 0 || pensionPrinc !== 0 || isaPrinc !== 0) { 
+        pensionIsaEval = isaEval + pensionEval;
+        pensionIsaPrinc = pensionPrinc + isaPrinc;
+        break; 
+      }
+    }
+
+    var latestData = {
+      defaultYear: defYear,
+      defaultMonth: defMonth,
+      date: lastCategoryStr,
+      netAssetRaw: lNet,
+      debtRaw: parseNum(latestRow[30]),
+      diffRaw: lNet - pNet,
+      estate: parseNum(latestRow[26]),
+      invest: parseNum(latestRow[25]),
+      deposit: parseNum(latestRow[24]),
+      retirementAmt: parseNum(latestRow[29]),
+      pensionProfit: pensionIsaEval - pensionIsaPrinc // 연금저축 + ISA 합산 미실현손익
+    };
+
+```
+
+---
+
+### 2. 🚀 프론트엔드(깃허브) 전체 코드
+
+기존 부동산 부대비용 명시 및 수익금 차감 로직, UI 변경 사항이 모두 포함된 전체 HTML 파일 코드입니다. 깃허브의 코드를 아래 내용으로 전부 교체해 주시면 됩니다.
+
+```html
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -78,7 +127,7 @@
                 </div>
                 <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl flex flex-col justify-center relative overflow-hidden">
                     <div class="absolute right-0 top-0 h-full w-1.5 bg-blue-400"></div>
-                    <span class="text-[10px] font-bold text-blue-700 tracking-wide uppercase">부동산 수익 (실현+평가)</span>
+                    <span class="text-[10px] font-bold text-blue-700 tracking-wide uppercase">부동산 수익 (순수익)</span>
                     <div class="mt-1 flex flex-col xl:flex-row xl:items-baseline gap-1">
                         <div><span id="liveEstateProfit" class="text-lg md:text-xl font-extrabold text-blue-900">-</span><span class="text-[10px] font-bold text-blue-800">원</span></div>
                         <span id="ratioEstate" class="text-[10px] font-bold text-blue-500 bg-blue-100 px-1.5 py-0.5 rounded-sm w-max">-%</span>
@@ -94,7 +143,7 @@
                 </div>
                 <div class="bg-amber-50/50 border border-amber-100 p-4 rounded-xl flex flex-col justify-center relative overflow-hidden">
                     <div class="absolute right-0 top-0 h-full w-1.5 bg-amber-400"></div>
-                    <span class="text-[10px] font-bold text-amber-700 tracking-wide uppercase">연금저축 미실현손익</span>
+                    <span class="text-[10px] font-bold text-amber-700 tracking-wide uppercase">연금저축+ISA 미실현손익</span>
                     <div class="mt-1 flex flex-col xl:flex-row xl:items-baseline gap-1">
                         <div><span id="livePensionProfit" class="text-lg md:text-xl font-extrabold text-amber-900">-</span><span class="text-[10px] font-bold text-amber-800">원</span></div>
                         <span id="ratioPension" class="text-[10px] font-bold text-amber-500 bg-amber-100 px-1.5 py-0.5 rounded-sm w-max">-%</span>
@@ -215,19 +264,22 @@
             // 1. 총 순자산 증가액
             var totalAssetIncrease = endNetAsset - startNetAsset;
             
-            // 2. 부동산 수익
+            // 💡 2. 부동산 수익 (수식 수정: 취득세, 매수/매도복비 명시적 차감 적용)
             var totalEstateProfit = 0;
             if(data.estateTimeline && data.estateTimeline.length > 0) {
-                data.estateTimeline.forEach(function(item) { totalEstateProfit += item.profit; });
+                data.estateTimeline.forEach(function(item) { 
+                    item.netProfit = item.profit - (item.tax + item.buyFee + item.sellFee);
+                    totalEstateProfit += item.netProfit; 
+                });
             }
             
             // 3. 주식 누적 실현손익
             var stockProfit = data.stockTotalCumulative || 0;
             
-            // 4. 연금저축 미실현손익 (백엔드 연동: Q열 - R열)
+            // 4. 연금저축+ISA 미실현손익 (백엔드 연산 합산본 적용)
             var pensionProfit = data.latest.pensionProfit || 0;
             
-            // 5. 순수 저축 (전체 증가분 - 부동산수익 - 주식손익 - 연금손익)
+            // 5. 순수 저축 (전체 증가분 - 부동산수익 - 주식손익 - 연금+ISA손익)
             var pureSavings = totalAssetIncrease - totalEstateProfit - stockProfit - pensionProfit;
 
             // UI 업데이트
@@ -266,10 +318,12 @@
             initYearMonthSelectors(); initGangrokSelectors();
             renderTrendChart(data.categories, data.estate, data.invest, data.deposit, data.retirement, data.total);
 
+            // 💡 6. 부동산 타임라인 카드 렌더링 (비용 항목 아예 명시되도록 UI 추가)
             var timelineContainer = document.getElementById("estateTimelineContainer");
             var timelineHtml = "";
             data.estateTimeline.forEach(function(item) {
                 var isHold = (item.status.trim() === '보유 중');
+                
                 timelineHtml += `<div class="border ${isHold ? 'border-blue-200 ring-2 ring-blue-500/10' : 'border-slate-100'} rounded-xl overflow-hidden bg-white flex flex-col justify-between text-[11px]">
                     <div class="${isHold ? 'bg-blue-600' : 'bg-slate-900'} p-3 text-white flex justify-between items-center">
                         <h3 class="font-bold">${item.name}</h3>
@@ -278,8 +332,28 @@
                     <div class="p-3 space-y-2 text-slate-600">
                         <div class="flex justify-between border-b border-slate-100 pb-1"><span>기간</span><span class="font-semibold text-slate-800">${item.buyDate} ~ ${item.sellDate}</span></div>
                         <div class="flex justify-between border-b border-slate-100 pb-1"><span>매수/매도</span><span class="font-semibold text-slate-800">${formatAssetUnit(item.buyAmt / 10000)}원 / ${formatAssetUnit(item.sellAmt / 10000)}원</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1"><span>실투자액</span><span class="font-bold text-slate-900">${item.investAmt.toLocaleString()}원</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1 p-1 rounded-md bg-emerald-50/40"><span class="text-emerald-800 font-bold">평가손익</span><span class="font-extrabold text-emerald-600">${item.profit.toLocaleString()}원</span></div>
+                        
+                        <div class="bg-slate-50/70 p-2 rounded-md border border-slate-100 space-y-1.5 my-1">
+                            <div class="flex justify-between text-[10px]">
+                                <span class="text-slate-500 tracking-wide">└ 취득세</span>
+                                <span class="font-semibold text-rose-500">${item.tax > 0 ? '-' + item.tax.toLocaleString() + '원' : '0원'}</span>
+                            </div>
+                            <div class="flex justify-between text-[10px]">
+                                <span class="text-slate-500 tracking-wide">└ 매수복비</span>
+                                <span class="font-semibold text-rose-500">${item.buyFee > 0 ? '-' + item.buyFee.toLocaleString() + '원' : '0원'}</span>
+                            </div>
+                            <div class="flex justify-between text-[10px]">
+                                <span class="text-slate-500 tracking-wide">└ 매도복비</span>
+                                <span class="font-semibold text-rose-500">${item.sellFee > 0 ? '-' + item.sellFee.toLocaleString() + '원' : '0원'}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between border-b border-slate-100 pb-1 mt-1"><span>실투자액</span><span class="font-bold text-slate-900">${item.investAmt.toLocaleString()}원</span></div>
+                        
+                        <div class="flex justify-between border-b border-slate-100 pb-1 p-1.5 rounded-md bg-emerald-50/40">
+                            <span class="text-emerald-800 font-bold flex items-center">실수익<span class="text-[9px] text-emerald-600/80 ml-1">(비용차감)</span></span>
+                            <span class="font-extrabold text-emerald-600">${item.netProfit.toLocaleString()}원</span>
+                        </div>
                     </div>
                     <div class="bg-slate-50 px-3 py-2 border-t border-slate-100 grid grid-cols-3 gap-1 text-center text-[10px]">
                         <div class="border-r border-slate-200"><p class="text-slate-400">투자일수</p><p class="font-bold text-slate-700">${item.days}</p></div>
@@ -447,3 +521,5 @@
     </script>
 </body>
 </html>
+
+```
