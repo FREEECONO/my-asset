@@ -250,7 +250,7 @@
                 .catch(error => { alert("데이터를 불러오지 못했습니다. 구글 앱스 스크립트 연결을 확인해주세요."); });
         });
 
-        function onDataLoadSuccess(data) {
+function onDataLoadSuccess(data) {
             if (data.status === "error") { return alert("에러: " + data.message); }
             globalDashboardData = data;
 
@@ -264,22 +264,21 @@
             // 1. 총 순자산 증가액
             var totalAssetIncrease = endNetAsset - startNetAsset;
             
-            // 💡 2. 부동산 수익 (수식 수정: 취득세, 매수/매도복비 명시적 차감 적용)
+            // 💡 2. 부동산 수익 (수정: 엑셀의 실수익이 이미 비용 차감된 순수익이므로 그대로 합산)
             var totalEstateProfit = 0;
             if(data.estateTimeline && data.estateTimeline.length > 0) {
                 data.estateTimeline.forEach(function(item) { 
-                    item.netProfit = item.profit - (item.tax + item.buyFee + item.sellFee);
-                    totalEstateProfit += item.netProfit; 
+                    totalEstateProfit += item.profit; 
                 });
             }
             
             // 3. 주식 누적 실현손익
             var stockProfit = data.stockTotalCumulative || 0;
             
-            // 4. 연금저축+ISA 미실현손익 (백엔드 연산 합산본 적용)
+            // 4. 연금저축+ISA 미실현손익
             var pensionProfit = data.latest.pensionProfit || 0;
             
-            // 5. 순수 저축 (전체 증가분 - 부동산수익 - 주식손익 - 연금+ISA손익)
+            // 5. 순수 저축
             var pureSavings = totalAssetIncrease - totalEstateProfit - stockProfit - pensionProfit;
 
             // UI 업데이트
@@ -318,7 +317,7 @@
             initYearMonthSelectors(); initGangrokSelectors();
             renderTrendChart(data.categories, data.estate, data.invest, data.deposit, data.retirement, data.total);
 
-            // 💡 6. 부동산 타임라인 카드 렌더링 (비용 항목 아예 명시되도록 UI 추가)
+            // 💡 6. 부동산 타임라인 카드 렌더링
             var timelineContainer = document.getElementById("estateTimelineContainer");
             var timelineHtml = "";
             data.estateTimeline.forEach(function(item) {
@@ -351,8 +350,8 @@
                         <div class="flex justify-between border-b border-slate-100 pb-1 mt-1"><span>실투자액</span><span class="font-bold text-slate-900">${item.investAmt.toLocaleString()}원</span></div>
                         
                         <div class="flex justify-between border-b border-slate-100 pb-1 p-1.5 rounded-md bg-emerald-50/40">
-                            <span class="text-emerald-800 font-bold flex items-center">실수익<span class="text-[9px] text-emerald-600/80 ml-1">(비용차감)</span></span>
-                            <span class="font-extrabold text-emerald-600">${item.netProfit.toLocaleString()}원</span>
+                            <span class="text-emerald-800 font-bold flex items-center">실수익<span class="text-[9px] text-emerald-600/80 ml-1">(부대비용 차감 완료)</span></span>
+                            <span class="font-extrabold text-emerald-600">${item.profit.toLocaleString()}원</span>
                         </div>
                     </div>
                     <div class="bg-slate-50 px-3 py-2 border-t border-slate-100 grid grid-cols-3 gap-1 text-center text-[10px]">
