@@ -152,6 +152,12 @@
                     <button id="btnTr36" class="seg-btn" onclick="setTrendRange(36)">3년</button>
                     <button id="btnTr0" class="seg-btn active" onclick="setTrendRange(0)">전체</button>
                 </div>
+                <div class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500">
+                    <span>기간</span>
+                    <select id="trFrom" onchange="onTrendSelect()" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-md px-2 py-1 font-bold"></select>
+                    <span>~</span>
+                    <select id="trTo" onchange="onTrendSelect()" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-md px-2 py-1 font-bold"></select>
+                </div>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
                 <div class="bg-slate-50 border border-slate-100 p-2.5 rounded-lg col-span-2 md:col-span-1">
@@ -221,7 +227,7 @@
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwMNYGJ2ccIKLRtbL9QzBApuOFtkhI8mcnv8fHPBl1emF11OXSqsZ_8f5eM0ABfSy8d/exec";
 
         var globalDashboardData = null; var pieChartObject = null; var trendChart = null; var gangrokPieChart = null; var yearlyChart = null; var grTrendChart = null;
-        var decompMode = "12m"; var trendRange = 0; var curRec = null; var grList = [];
+        var decompMode = "12m"; var trendRange = 0; var trFrom = 0; var trTo = -1; var curRec = null; var grList = [];
         var recList = [];      // 월별 기록을 시간순으로 펼친 배열
         var trendMode = "all";
         function isMobile() { return window.innerWidth < 768; }
@@ -635,14 +641,35 @@
             renderTrendChart();
         }
 
-        function setTrendRange(n) {
-            trendRange = n;
+        function fillTrendSelects() {
+            var cats = globalDashboardData.categories;
+            var html = cats.map(function(c, i) { return '<option value="' + i + '">' + c.replace("-", ".") + '</option>'; }).join("");
+            document.getElementById("trFrom").innerHTML = html;
+            document.getElementById("trTo").innerHTML = html;
+        }
+        function markTrendButtons(n) {
             [[12,"btnTr12"],[24,"btnTr24"],[36,"btnTr36"],[0,"btnTr0"]].forEach(function(p) { document.getElementById(p[1]).className = "seg-btn" + (p[0] === n ? " active" : ""); });
+        }
+        function setTrendRange(n) {   // 빠른 선택: 마지막 달 기준 n개월 (0 = 전체)
+            var last = globalDashboardData.categories.length - 1;
+            trTo = last; trFrom = n ? Math.max(0, last - n + 1) : 0;
+            markTrendButtons(n);
+            renderTrendChart();
+        }
+        function onTrendSelect() {    // 시작월~끝월 직접 선택
+            var a = +document.getElementById("trFrom").value, b = +document.getElementById("trTo").value;
+            if (a > b) { var t = a; a = b; b = t; }
+            trFrom = a; trTo = b;
+            markTrendButtons(-1);
             renderTrendChart();
         }
         function renderTrendChart() {
-            var g = globalDashboardData, k = trendRange ? -trendRange : 0;
-            function sl(a) { return k ? a.slice(k) : a.slice(); }
+            var g = globalDashboardData;
+            if (!document.getElementById("trFrom").options.length) fillTrendSelects();
+            if (trTo < 0) trTo = g.categories.length - 1;
+            document.getElementById("trFrom").value = trFrom;
+            document.getElementById("trTo").value = trTo;
+            function sl(a) { return a.slice(trFrom, trTo + 1); }
             var d = { categories: sl(g.categories), estate: sl(g.estate), invest: sl(g.invest), deposit: sl(g.deposit), retirement: sl(g.retirement), total: sl(g.total) };
             var finTotal = d.invest.map(function(v, i) { return v + d.deposit[i] + d.retirement[i]; });
             var series, colors, strokeW, lineIdx;
@@ -682,10 +709,11 @@
                 labels: d.categories,
                 legend: { position: 'top', horizontalAlign: 'left', fontSize: '11px' },
                 dataLabels: {
-                    enabled: !mobile, enabledOnSeries: [lineIdx],
-                    formatter: function(val, o) {   // 6개월마다 + 마지막 달만 표시
+                    enabled: true, enabledOnSeries: [lineIdx],
+                    formatter: function(val, o) {   // 기간이 짧으면 매달, 길면 겹치지 않게 간격을 두고 표시 (마지막 달은 항상)
                         var i = o.dataPointIndex, n = d.categories.length;
-                        return (i === n - 1 || (n - 1 - i) % 6 === 0) ? formatAssetUnit(val) : "";
+                        var maxLabels = mobile ? 8 : 24, step = Math.max(1, Math.ceil(n / maxLabels));
+                        return ((n - 1 - i) % step === 0) ? formatAssetUnit(val) : "";
                     },
                     style: { fontSize: '10px', fontWeight: 700, colors: ['#334155'] },
                     background: { enabled: true, foreColor: '#fff', padding: 3, borderRadius: 3, opacity: 0.95 }
