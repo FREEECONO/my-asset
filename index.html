@@ -90,27 +90,20 @@
             </div>
         </section>
 
-        <!-- ③ 순자산 증감 분해 -->
+        <!-- ③ 순자산 증감 분해 (누적 기여도 통합) -->
         <section class="bg-white p-4 md:p-6 rounded-xl border border-slate-100 space-y-3">
-            <div>
-                <h2 class="text-sm md:text-base font-bold text-slate-900">🧩 순자산은 어디서 늘었나</h2>
-                <p class="text-[11px] text-slate-500 mt-0.5">순자산 변화를 부동산 순가치 변동(시세 + 대출 상환)과 금융자산 변동(저축 + 투자손익)으로 나눴습니다.</p>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl">
-                    <span class="text-[11px] font-bold text-slate-500">최근 12개월 순자산 변화</span>
-                    <div class="mt-0.5 num"><span id="d12Net" class="text-lg font-extrabold text-slate-900">-</span></div>
-                    <p id="d12Period" class="text-[11px] text-slate-400"></p>
+            <div class="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                    <h2 class="text-sm md:text-base font-bold text-slate-900">🧩 순자산은 어디서 늘었나</h2>
+                    <p id="decompDesc" class="text-[11px] text-slate-500 mt-0.5"></p>
                 </div>
-                <div class="bg-blue-50/50 border border-blue-100 p-3 rounded-xl">
-                    <span class="text-[11px] font-bold text-blue-700">└ 부동산 순가치 변동</span>
-                    <div class="mt-0.5 num flex items-baseline gap-1.5"><span id="d12Estate" class="text-lg font-extrabold text-blue-900">-</span><span id="d12EstatePct" class="text-[11px] font-bold text-blue-500"></span></div>
-                </div>
-                <div class="bg-amber-50/50 border border-amber-100 p-3 rounded-xl">
-                    <span class="text-[11px] font-bold text-amber-700">└ 금융자산 변동</span>
-                    <div class="mt-0.5 num flex items-baseline gap-1.5"><span id="d12Fin" class="text-lg font-extrabold text-amber-900">-</span><span id="d12FinPct" class="text-[11px] font-bold text-amber-600"></span></div>
+                <div class="inline-flex bg-slate-100 rounded-lg p-0.5">
+                    <button id="btnDec12m" class="seg-btn active" onclick="setDecompMode('12m')">최근 12개월</button>
+                    <button id="btnDecYtd" class="seg-btn" onclick="setDecompMode('ytd')">올해</button>
+                    <button id="btnDecAll" class="seg-btn" onclick="setDecompMode('all')">전체</button>
                 </div>
             </div>
+            <div id="decompBody"></div>
             <div>
                 <p class="text-xs font-bold text-slate-700 mt-2">연도별 순자산 증감 <span class="font-medium text-slate-400">(전년 말 대비, 올해는 최근월까지)</span></p>
                 <div id="yearlyChart" class="pt-1"></div>
@@ -125,6 +118,7 @@
                 <div class="inline-flex bg-slate-100 rounded-lg p-0.5">
                     <button id="btnTrendAll" class="seg-btn active" onclick="setTrendMode('all')">전체 순자산</button>
                     <button id="btnTrendFin" class="seg-btn" onclick="setTrendMode('fin')">금융자산만</button>
+                    <button id="btnTrendEst" class="seg-btn" onclick="setTrendMode('estate')">부동산만</button>
                 </div>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
@@ -152,44 +146,6 @@
             <div id="trendChart" class="pt-1"></div>
         </section>
 
-        <!-- ⑤ 성장 기여도 (누적) -->
-        <section class="bg-white p-4 md:p-6 rounded-xl border border-slate-100">
-            <h2 class="text-sm md:text-base font-bold text-slate-900 mb-3">💡 누적 성장 기여도 <span id="baseLabel" class="text-[11px] font-medium text-slate-400 ml-0.5"></span></h2>
-            <div class="grid grid-cols-2 lg:grid-cols-5 gap-2.5">
-                <div class="col-span-2 lg:col-span-1 bg-slate-50 border border-slate-200 p-3 md:p-4 rounded-xl">
-                    <span class="text-[11px] font-bold text-slate-500">총 순자산 증가액</span>
-                    <div class="mt-1 num"><span id="liveTotalIncrease" class="text-lg md:text-xl font-extrabold text-slate-800">-</span><span class="text-[11px] font-bold text-slate-600 ml-0.5">원</span></div>
-                </div>
-                <div class="bg-blue-50/50 border border-blue-100 p-3 md:p-4 rounded-xl">
-                    <span class="text-[11px] font-bold text-blue-700">부동산 수익</span>
-                    <div class="mt-1 num"><span id="liveEstateProfit" class="text-base md:text-xl font-extrabold text-blue-900">-</span></div>
-                    <span id="ratioEstate" class="inline-block mt-1 text-[11px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded-sm">-%</span>
-                </div>
-                <div class="bg-indigo-50/50 border border-indigo-100 p-3 md:p-4 rounded-xl">
-                    <span class="text-[11px] font-bold text-indigo-700">주식 누적 실현손익</span>
-                    <div class="mt-1 num"><span id="liveStockProfit" class="text-base md:text-xl font-extrabold text-indigo-900">-</span></div>
-                    <span id="ratioStock" class="inline-block mt-1 text-[11px] font-bold text-indigo-600 bg-indigo-100 px-1.5 py-0.5 rounded-sm">-%</span>
-                </div>
-                <div class="bg-amber-50/50 border border-amber-100 p-3 md:p-4 rounded-xl">
-                    <span class="text-[11px] font-bold text-amber-700">연금+ISA 미실현손익</span>
-                    <div class="mt-1 num"><span id="livePensionProfit" class="text-base md:text-xl font-extrabold text-amber-900">-</span></div>
-                    <span id="ratioPension" class="inline-block mt-1 text-[11px] font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-sm">-%</span>
-                    <p id="pensionAsOf" class="text-[11px] text-amber-700/80 mt-1"></p>
-                </div>
-                <div class="bg-emerald-50/50 border border-emerald-100 p-3 md:p-4 rounded-xl">
-                    <span class="text-[11px] font-bold text-emerald-700">순수 저축 (나머지)</span>
-                    <div class="mt-1 num"><span id="livePureSavings" class="text-base md:text-xl font-extrabold text-emerald-900">-</span></div>
-                    <span id="ratioSavings" class="inline-block mt-1 text-[11px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-sm">-%</span>
-                </div>
-            </div>
-            <div class="mt-3 flex h-3 w-full overflow-hidden rounded-full bg-slate-100">
-                <div id="barEstate" class="bg-blue-500 transition-all duration-1000" style="width: 0%;"></div>
-                <div id="barStock" class="bg-indigo-400 transition-all duration-1000" style="width: 0%;"></div>
-                <div id="barPension" class="bg-amber-400 transition-all duration-1000" style="width: 0%;"></div>
-                <div id="barSavings" class="bg-emerald-400 transition-all duration-1000" style="width: 0%;"></div>
-            </div>
-        </section>
-
         <!-- ⑥ 아파트 -->
         <section class="bg-white p-4 md:p-6 rounded-xl border border-slate-100">
             <h2 class="text-sm md:text-base font-bold text-slate-900 mb-3">🏠 아파트 매수매도 히스토리</h2>
@@ -206,9 +162,33 @@
         </section>
 
         <!-- ⑧ 강록 자산 -->
-        <section class="bg-white p-4 md:p-6 rounded-xl border border-slate-100">
-            <div class="flex flex-row items-center justify-between gap-2 mb-3">
-                <h2 class="text-sm md:text-base font-bold text-slate-900">👶 강록 자산</h2>
+        <section class="bg-white p-4 md:p-6 rounded-xl border border-slate-100 space-y-3">
+            <h2 class="text-sm md:text-base font-bold text-slate-900">👶 강록 자산 <span id="grLatestLabel" class="text-[11px] font-medium text-slate-400 ml-0.5"></span></h2>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+                <div class="bg-blue-50/50 border border-blue-100 p-3 rounded-xl">
+                    <span class="text-[11px] font-bold text-blue-700">현재 총액</span>
+                    <div class="mt-0.5 num"><span id="grKpiTotal" class="text-lg md:text-xl font-extrabold text-slate-900">-</span></div>
+                    <p id="grKpiTotalDiff" class="text-[11px] font-semibold mt-0.5 text-slate-400">-</p>
+                </div>
+                <div class="bg-purple-50/50 border border-purple-100 p-3 rounded-xl">
+                    <span class="text-[11px] font-bold text-purple-700">예금</span>
+                    <div class="mt-0.5 num"><span id="grKpiCash" class="text-lg md:text-xl font-extrabold text-slate-900">-</span></div>
+                    <p id="grKpiCashSub" class="text-[11px] font-semibold mt-0.5 text-slate-500">-</p>
+                </div>
+                <div class="bg-pink-50/50 border border-pink-100 p-3 rounded-xl">
+                    <span class="text-[11px] font-bold text-pink-700">주식</span>
+                    <div class="mt-0.5 num"><span id="grKpiStock" class="text-lg md:text-xl font-extrabold text-slate-900">-</span></div>
+                    <p id="grKpiStockSub" class="text-[11px] font-semibold mt-0.5 text-slate-500">-</p>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                    <span class="text-[11px] font-bold text-slate-600">처음 기록 대비</span>
+                    <div class="mt-0.5 num"><span id="grKpiGrowth" class="text-lg md:text-xl font-extrabold text-slate-900">-</span></div>
+                    <p id="grKpiGrowthSub" class="text-[11px] font-semibold mt-0.5 text-slate-500">-</p>
+                </div>
+            </div>
+            <div id="grTrendChart"></div>
+            <div class="flex flex-row items-center justify-between gap-2 pt-1">
+                <p class="text-xs font-bold text-slate-700">월별 상세</p>
                 <div class="flex items-center gap-1.5">
                     <select id="grYear" onchange="onGrYearChange(this.value)" class="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-md px-2 py-1.5 font-bold focus:ring-2 focus:ring-blue-500"></select>
                     <select id="grMonth" onchange="onGrMonthChange(this.value)" class="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-md px-2 py-1.5 font-bold focus:ring-2 focus:ring-blue-500"></select>
@@ -218,12 +198,12 @@
                 <div class="md:col-span-7 border border-slate-200/60 rounded-xl overflow-hidden bg-white">
                     <table class="w-full text-left text-slate-600 text-xs num">
                         <thead class="text-slate-700 bg-slate-50 border-b border-slate-100">
-                            <tr><th class="px-3 py-2">구성 항목</th><th class="px-3 py-2 text-right">금액 (원)</th></tr>
+                            <tr><th class="px-3 py-2">구성 항목</th><th class="px-3 py-2 text-right">금액 (원)</th><th class="px-3 py-2 text-right">전월비</th></tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 font-medium">
-                            <tr><td class="px-3 py-2 text-slate-900"><span class="inline-block w-2 h-2 rounded-sm bg-[#a855f7] mr-1.5"></span>강록 예금</td><td id="tblGrDeposit" class="px-3 py-2 text-right text-slate-900 font-bold">-</td></tr>
-                            <tr><td class="px-3 py-2 text-slate-900"><span class="inline-block w-2 h-2 rounded-sm bg-[#ec4899] mr-1.5"></span>강록 주식 계좌</td><td id="tblGrStock" class="px-3 py-2 text-right text-slate-900 font-bold">-</td></tr>
-                            <tr class="bg-slate-50/50 font-bold text-slate-900"><td class="px-3 py-2 text-slate-800">강록 자산 총계</td><td id="tblGrTotal" class="px-3 py-2 text-right text-blue-600 font-extrabold">-</td></tr>
+                            <tr><td class="px-3 py-2 text-slate-900"><span class="inline-block w-2 h-2 rounded-sm bg-[#a855f7] mr-1.5"></span>강록 예금</td><td id="tblGrDeposit" class="px-3 py-2 text-right text-slate-900 font-bold">-</td><td id="dGrDeposit" class="px-3 py-2 text-right">-</td></tr>
+                            <tr><td class="px-3 py-2 text-slate-900"><span class="inline-block w-2 h-2 rounded-sm bg-[#ec4899] mr-1.5"></span>강록 주식 계좌</td><td id="tblGrStock" class="px-3 py-2 text-right text-slate-900 font-bold">-</td><td id="dGrStock" class="px-3 py-2 text-right">-</td></tr>
+                            <tr class="bg-slate-50/50 font-bold text-slate-900"><td class="px-3 py-2 text-slate-800">강록 자산 총계</td><td id="tblGrTotal" class="px-3 py-2 text-right text-blue-600 font-extrabold">-</td><td id="dGrTotal" class="px-3 py-2 text-right">-</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -235,7 +215,8 @@
     <script>
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwMNYGJ2ccIKLRtbL9QzBApuOFtkhI8mcnv8fHPBl1emF11OXSqsZ_8f5eM0ABfSy8d/exec";
 
-        var globalDashboardData = null; var pieChartObject = null; var trendChart = null; var gangrokPieChart = null; var yearlyChart = null;
+        var globalDashboardData = null; var pieChartObject = null; var trendChart = null; var gangrokPieChart = null; var yearlyChart = null; var grTrendChart = null;
+        var decompMode = "12m"; var curRec = null; var grList = [];
         var recList = [];      // 월별 기록을 시간순으로 펼친 배열
         var trendMode = "all";
         function isMobile() { return window.innerWidth < 768; }
@@ -335,42 +316,6 @@
             var first = recList[0];
             var startNetAsset = first.netAssetRaw;
             var endNetAsset = data.latest.netAssetRaw;
-            document.getElementById("baseLabel").innerText = "(" + ymLabel(first.date) + " 대비)";
-
-            // 누적 성장 기여도
-            var totalAssetIncrease = endNetAsset - startNetAsset;
-            var totalEstateProfit = 0;
-            (data.estateTimeline || []).forEach(function(item) { totalEstateProfit += item.profit; });
-            var stockProfit = data.stockTotalCumulative || 0;
-            var pensionProfit = data.latest.pensionProfit || 0;
-            var asOfEl = document.getElementById("pensionAsOf");
-            if (data.latest.pensionProfitAsOf && data.latest.pensionProfitAsOf !== data.latest.date) {
-                asOfEl.innerText = "※ " + data.latest.pensionProfitAsOf + " 기준 (이후 원금 미입력)";
-            } else { asOfEl.innerText = ""; }
-            var pureSavings = totalAssetIncrease - totalEstateProfit - stockProfit - pensionProfit;
-
-            document.getElementById("liveTotalIncrease").innerText = signed(totalAssetIncrease);
-            document.getElementById("liveEstateProfit").innerText = signedEok(totalEstateProfit);
-            document.getElementById("liveStockProfit").innerText = signedEok(stockProfit);
-            document.getElementById("livePensionProfit").innerText = signedEok(pensionProfit);
-            document.getElementById("livePureSavings").innerText = signedEok(pureSavings);
-
-            if (totalAssetIncrease > 0) {
-                var estateRatio = Math.max(0, (totalEstateProfit / totalAssetIncrease) * 100);
-                var stockRatio = Math.max(0, (stockProfit / totalAssetIncrease) * 100);
-                var pensionRatio = Math.max(0, (pensionProfit / totalAssetIncrease) * 100);
-                var savingsRatio = Math.max(0, (pureSavings / totalAssetIncrease) * 100);
-                document.getElementById("ratioEstate").innerText = estateRatio.toFixed(1) + "%";
-                document.getElementById("ratioStock").innerText = stockRatio.toFixed(1) + "%";
-                document.getElementById("ratioPension").innerText = pensionRatio.toFixed(1) + "%";
-                document.getElementById("ratioSavings").innerText = savingsRatio.toFixed(1) + "%";
-                setTimeout(function() {
-                    document.getElementById("barEstate").style.width = estateRatio + "%";
-                    document.getElementById("barStock").style.width = stockRatio + "%";
-                    document.getElementById("barPension").style.width = pensionRatio + "%";
-                    document.getElementById("barSavings").style.width = savingsRatio + "%";
-                }, 300);
-            }
 
             document.getElementById("metricMonths").innerText = data.metrics.totalMonths;
             document.getElementById("metricRate").innerText = data.metrics.monthlyRate;
@@ -378,7 +323,9 @@
             document.getElementById("metricYearlyRate").innerText = data.metrics.yearlyRate;
             document.getElementById("metricYearlyIncrement").innerText = data.metrics.avgYearlyIncrement.toLocaleString();
 
+            buildGangrokList();
             initYearMonthSelectors(); initGangrokSelectors();
+            renderGangrokSummary();
             renderTrendChart();
             renderYearlyChart();
 
@@ -475,24 +422,117 @@
             document.getElementById("tblNet").innerText = won(net);
             updatePieChartInstance(r.estate, r.invest, r.deposit, r.retirementAmt);
 
-            // ③ 최근 12개월 분해
-            var base = findRec(ymShift(r.date, -12));
-            var nEl = document.getElementById("d12Net"), eEl = document.getElementById("d12Estate"), fEl = document.getElementById("d12Fin");
-            var ePct = document.getElementById("d12EstatePct"), fPct = document.getElementById("d12FinPct");
-            if (base) {
-                var dNet = net - base.netAssetRaw, dEst = r.estate - base.estate, dFin = fin - finOf(base);
-                nEl.innerText = signedEok(dNet); eEl.innerText = signedEok(dEst); fEl.innerText = signedEok(dFin);
-                document.getElementById("d12Period").innerText = ymLabel(base.date) + " → " + ymLabel(r.date);
-                var denom = Math.abs(dEst) + Math.abs(dFin);
-                ePct.innerText = denom > 0 && dNet > 0 && dEst > 0 ? "증가분의 " + Math.round(dEst / dNet * 100) + "%" : "";
-                fPct.innerText = denom > 0 && dNet > 0 && dFin > 0 ? "증가분의 " + Math.round(dFin / dNet * 100) + "%" : "";
-            } else {
-                nEl.innerText = "-"; eEl.innerText = "-"; fEl.innerText = "-"; ePct.innerText = ""; fPct.innerText = "";
-                document.getElementById("d12Period").innerText = "12개월 전 기록이 없습니다";
+            curRec = r;
+            renderDecomp();
+        }
+
+        // ---- ③ 순자산 증감 분해 ----
+        function setDecompMode(mode) {
+            decompMode = mode;
+            [["12m","btnDec12m"],["ytd","btnDecYtd"],["all","btnDecAll"]].forEach(function(p) {
+                document.getElementById(p[1]).className = "seg-btn" + (p[0] === mode ? " active" : "");
+            });
+            renderDecomp();
+        }
+        function card(cls, label, valueHtml, sub) {
+            return '<div class="' + cls + ' p-3 rounded-xl"><span class="text-[11px] font-bold">' + label + '</span>' +
+                   '<div class="mt-0.5 num text-lg font-extrabold text-slate-900">' + valueHtml + '</div>' +
+                   (sub ? '<p class="text-[11px] font-semibold mt-0.5 opacity-80">' + sub + '</p>' : '') + '</div>';
+        }
+        function shareTxt(part, whole) { return (whole > 0 && part > 0) ? "증가분의 " + Math.round(part / whole * 100) + "%" : ""; }
+
+        function renderDecomp() {
+            var d = globalDashboardData, r = curRec, body = document.getElementById("decompBody"), desc = document.getElementById("decompDesc");
+            if (!r) return;
+            if (decompMode === "all") {
+                var first = recList[0];
+                var total = d.latest.netAssetRaw - first.netAssetRaw;
+                var est = 0; (d.estateTimeline || []).forEach(function(i) { est += i.profit; });
+                var stk = d.stockTotalCumulative || 0, pen = d.latest.pensionProfit || 0;
+                var sav = total - est - stk - pen;
+                var penNote = (d.latest.pensionProfitAsOf && d.latest.pensionProfitAsOf !== d.latest.date) ? "※ " + d.latest.pensionProfitAsOf + " 기준" : "";
+                desc.innerText = ymLabel(first.date) + " → " + ymLabel(d.latest.date) + " 전체 기간. 번 돈의 출처(수익 종류)별로 나눴습니다.";
+                function pct(v) { return total > 0 ? Math.max(0, v / total * 100) : 0; }
+                body.innerHTML =
+                    '<div class="grid grid-cols-2 lg:grid-cols-5 gap-2.5">' +
+                    '<div class="col-span-2 lg:col-span-1">' + card("bg-slate-50 border border-slate-200 text-slate-600", "전체 순자산 증가", signedEok(total), won(total) + "원") + '</div>' +
+                    card("bg-blue-50/50 border border-blue-100 text-blue-700", "부동산 수익", signedEok(est), pct(est).toFixed(1) + "% · 매매+평가 차익") +
+                    card("bg-indigo-50/50 border border-indigo-100 text-indigo-700", "주식 실현손익", signedEok(stk), pct(stk).toFixed(1) + "%") +
+                    card("bg-amber-50/50 border border-amber-100 text-amber-700", "연금+ISA 평가손익", signedEok(pen), pct(pen).toFixed(1) + "%" + (penNote ? " · " + penNote : "")) +
+                    card("bg-emerald-50/50 border border-emerald-100 text-emerald-700", "저축 등 나머지 (추정)", signedEok(sav), pct(sav).toFixed(1) + "%") +
+                    '</div>' +
+                    '<div class="mt-3 flex h-3 w-full overflow-hidden rounded-full bg-slate-100">' +
+                    '<div class="bg-blue-500" style="width:' + pct(est) + '%"></div><div class="bg-indigo-400" style="width:' + pct(stk) + '%"></div>' +
+                    '<div class="bg-amber-400" style="width:' + pct(pen) + '%"></div><div class="bg-emerald-400" style="width:' + pct(sav) + '%"></div></div>' +
+                    '<p class="text-[11px] text-slate-400 mt-2">※ "저축 등 나머지"는 전체 증가분에서 수익들을 뺀 값이라 정확한 저축액이 아닙니다. 기준월 선택과 관계없이 최신월 기준입니다.</p>';
+                return;
             }
+            var base, label;
+            if (decompMode === "12m") { base = findRec(ymShift(r.date, -12)); label = "최근 12개월"; }
+            else {
+                var py = String(+r.date.substring(0, 4) - 1), cands = recList.filter(function(x) { return x.date.substring(0, 4) === py; });
+                base = cands.length ? cands[cands.length - 1] : (recList[0] !== r ? recList[0] : null); label = r.date.substring(0, 4) + "년";
+            }
+            if (!base) {
+                desc.innerText = "비교할 이전 기록이 없습니다.";
+                body.innerHTML = ""; return;
+            }
+            var fin = finOf(r), dNet = r.netAssetRaw - base.netAssetRaw, dEst = r.estate - base.estate, dFin = fin - finOf(base);
+            desc.innerText = label + " (" + ymLabel(base.date) + " 말 → " + ymLabel(r.date) + " 말). 돈이 있는 곳별로 나눴습니다: 부동산 순가치(시세 + 대출 상환) vs 금융자산(저축 + 투자손익).";
+            body.innerHTML = '<div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">' +
+                card("bg-slate-50 border border-slate-200 text-slate-600", "순자산 변화", signedEok(dNet), won(dNet) + "원") +
+                card("bg-blue-50/50 border border-blue-100 text-blue-700", "└ 부동산 순가치 변동", signedEok(dEst), shareTxt(dEst, dNet)) +
+                card("bg-amber-50/50 border border-amber-100 text-amber-700", "└ 금융자산 변동", signedEok(dFin), shareTxt(dFin, dNet) || (dFin < 0 ? "감소" : "")) +
+                '</div>';
         }
 
         // ---- 강록 ----
+        function buildGangrokList() {
+            grList = [];
+            var g = globalDashboardData.gangrokMonthly || {};
+            Object.keys(g).sort().forEach(function(y) {
+                Object.keys(g[y]).sort().forEach(function(m) { var o = g[y][m]; grList.push({ date: y + "-" + m, cash: o.cash, stock: o.stock, total: o.total }); });
+            });
+        }
+        function grPrevOf(ym) { for (var i = grList.length - 1; i >= 0; i--) if (grList[i].date < ym) return grList[i]; return null; }
+        function diffCell(el, v) {
+            if (v === null) { el.innerText = "-"; el.className = "px-3 py-2 text-right text-slate-400"; return; }
+            el.innerText = signed(v); el.className = "px-3 py-2 text-right font-semibold " + (v >= 0 ? "text-emerald-600" : "text-rose-600");
+        }
+        function renderGangrokSummary() {
+            if (!grList.length) return;
+            var last = grList[grList.length - 1], first = grList[0], prev = grList.length > 1 ? grList[grList.length - 2] : null;
+            document.getElementById("grLatestLabel").innerText = "(" + ymLabel(last.date) + " 기준)";
+            document.getElementById("grKpiTotal").innerText = eok(last.total);
+            setDiff(document.getElementById("grKpiTotalDiff"), prev ? last.total - prev.total : null, " 직전 기록비");
+            document.getElementById("grKpiCash").innerText = eok(last.cash);
+            document.getElementById("grKpiCashSub").innerText = last.total > 0 ? "비중 " + (last.cash / last.total * 100).toFixed(1) + "%" : "-";
+            document.getElementById("grKpiStock").innerText = eok(last.stock);
+            document.getElementById("grKpiStockSub").innerText = last.total > 0 ? "비중 " + (last.stock / last.total * 100).toFixed(1) + "%" : "-";
+            document.getElementById("grKpiGrowth").innerText = signedEok(last.total - first.total);
+            document.getElementById("grKpiGrowthSub").innerText = ymLabel(first.date) + " " + eok(first.total) + "에서";
+
+            var mobile = isMobile();
+            if (grTrendChart) grTrendChart.destroy();
+            grTrendChart = new ApexCharts(document.querySelector("#grTrendChart"), {
+                series: [
+                    { name: '예금', type: 'column', data: grList.map(function(x) { return Math.round(x.cash / 10000); }) },
+                    { name: '주식', type: 'column', data: grList.map(function(x) { return Math.round(x.stock / 10000); }) },
+                    { name: '총액', type: 'line', data: grList.map(function(x) { return Math.round(x.total / 10000); }) }
+                ],
+                chart: { height: mobile ? 240 : 280, type: 'line', stacked: true, toolbar: { show: false }, zoom: { enabled: false } },
+                colors: ['#a855f7', '#ec4899', '#1d4ed8'],
+                stroke: { width: [0, 0, 3], curve: 'smooth' },
+                markers: { size: [0, 0, 3] },
+                labels: grList.map(function(x) { return x.date; }),
+                legend: { position: 'top', horizontalAlign: 'left', fontSize: '11px' },
+                dataLabels: { enabled: !mobile, enabledOnSeries: [2], formatter: function(v, o) { return o.dataPointIndex === grList.length - 1 ? formatAssetUnit(v) : ""; }, style: { fontSize: '10px' }, background: { enabled: true, foreColor: '#fff', borderRadius: 3 } },
+                xaxis: { labels: { rotate: -45, hideOverlappingLabels: true, style: { fontSize: '10px' } } },
+                yaxis: { min: 0, forceNiceScale: true, labels: { style: { fontSize: '10px' }, formatter: function(v) { return formatAssetUnit(v); } } },
+                tooltip: { shared: true, intersect: false, y: { formatter: function(v) { return v == null ? "-" : Math.round(v).toLocaleString() + "만원"; } } }
+            });
+            grTrendChart.render();
+        }
         function initGangrokSelectors() {
             var grData = globalDashboardData.gangrokMonthly;
             var grYearSelect = document.getElementById("grYear");
@@ -517,6 +557,10 @@
             document.getElementById("tblGrDeposit").innerText = won(target.cash);
             document.getElementById("tblGrStock").innerText = won(target.stock);
             document.getElementById("tblGrTotal").innerText = won(target.total);
+            var gp = grPrevOf(year + "-" + month);
+            diffCell(document.getElementById("dGrDeposit"), gp ? target.cash - gp.cash : null);
+            diffCell(document.getElementById("dGrStock"), gp ? target.stock - gp.stock : null);
+            diffCell(document.getElementById("dGrTotal"), gp ? target.total - gp.total : null);
             if (!gangrokPieChart) {
                 gangrokPieChart = new ApexCharts(document.querySelector("#gangrokPieChart"), {
                     series: [target.cash, target.stock],
@@ -561,6 +605,7 @@
             trendMode = mode;
             document.getElementById("btnTrendAll").className = "seg-btn" + (mode === "all" ? " active" : "");
             document.getElementById("btnTrendFin").className = "seg-btn" + (mode === "fin" ? " active" : "");
+            document.getElementById("btnTrendEst").className = "seg-btn" + (mode === "estate" ? " active" : "");
             renderTrendChart();
         }
 
@@ -578,6 +623,12 @@
                 ];
                 colors = ['#3b82f6', '#f59e0b', '#10b981', '#64748b', '#0f766e'];
                 strokeW = [0, 0, 0, 0, 3]; lineIdx = 4;
+            } else if (trendMode === "estate") {
+                series = [
+                    { name: '부동산 순가치 (주담대 제외)', type: 'column', data: d.estate }
+                ];
+                colors = ['#3b82f6'];
+                strokeW = [0]; lineIdx = 0;
             } else {
                 series = [
                     { name: '주식/코인', type: 'column', data: d.invest },
@@ -678,7 +729,7 @@
         window.addEventListener("resize", function() {
             if (!globalDashboardData) return;
             var m = isMobile();
-            if (lastMobile !== null && m !== lastMobile) renderTrendChart();
+            if (lastMobile !== null && m !== lastMobile) { renderTrendChart(); renderGangrokSummary(); }
             lastMobile = m;
         });
     </script>
