@@ -12,6 +12,7 @@
         .loader { border-top-color: #3b82f6; animation: spinner 1.5s linear infinite; }
         @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .num { font-variant-numeric: tabular-nums; }
+        summary::-webkit-details-marker { display: none; }
         .seg-btn { padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; color: #64748b; }
         .seg-btn.active { background: #fff; color: #0f172a; box-shadow: 0 1px 2px rgba(15,23,42,.08); }
     </style>
@@ -94,7 +95,7 @@
         <section class="bg-white p-4 md:p-6 rounded-xl border border-slate-100 space-y-3">
             <div class="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                    <h2 class="text-sm md:text-base font-bold text-slate-900">🧩 순자산은 어디서 늘었나</h2>
+                    <h2 class="text-sm md:text-base font-bold text-slate-900">🧩 자산 기여 상세</h2>
                     <p id="decompDesc" class="text-[11px] text-slate-500 mt-0.5"></p>
                 </div>
                 <div class="inline-flex bg-slate-100 rounded-lg p-0.5">
@@ -104,12 +105,22 @@
                 </div>
             </div>
             <div id="decompBody"></div>
-            <div>
-                <p class="text-xs font-bold text-slate-700 mt-2">연도별 순자산 증감 <span class="font-medium text-slate-400">(전년 말 대비, 올해는 최근월까지)</span></p>
-                <div id="yearlyChart" class="pt-1"></div>
+        </section>
+
+        <!-- ③-2 연도별 증감 (펼치기) -->
+        <details id="yearlyDetails" class="group bg-white rounded-xl border border-slate-100">
+            <summary class="list-none cursor-pointer select-none p-4 md:px-6 flex items-center justify-between gap-2">
+                <div>
+                    <h2 class="text-sm md:text-base font-bold text-slate-900">📅 연도별 순자산 증감</h2>
+                    <p class="text-[11px] text-slate-500 mt-0.5">해마다 부동산 순가치와 금융자산이 얼마나 변했는지 (전년 말 대비)</p>
+                </div>
+                <span class="shrink-0 text-[11px] font-bold text-slate-500 bg-slate-100 rounded-md px-2 py-1"><span class="group-open:hidden">펼치기 ▾</span><span class="hidden group-open:inline">접기 ▴</span></span>
+            </summary>
+            <div class="px-4 md:px-6 pb-4 md:pb-6">
+                <div id="yearlyChart"></div>
                 <p class="text-[11px] text-slate-400">※ 집을 사고팔면 돈이 부동산 ↔ 예금·주식으로 옮겨가므로, 거래가 있던 해는 두 막대가 크게 엇갈려 보일 수 있습니다.</p>
             </div>
-        </section>
+        </details>
 
         <!-- ④ 월별 추이 -->
         <section class="bg-white p-4 md:p-6 rounded-xl border border-slate-100 space-y-3">
@@ -164,7 +175,7 @@
         <!-- ⑧ 강록 자산 -->
         <section class="bg-white p-4 md:p-6 rounded-xl border border-slate-100 space-y-3">
             <h2 class="text-sm md:text-base font-bold text-slate-900">👶 강록 자산 <span id="grLatestLabel" class="text-[11px] font-medium text-slate-400 ml-0.5"></span></h2>
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+            <div class="grid grid-cols-3 gap-2.5">
                 <div class="bg-blue-50/50 border border-blue-100 p-3 rounded-xl">
                     <span class="text-[11px] font-bold text-blue-700">현재 총액</span>
                     <div class="mt-0.5 num"><span id="grKpiTotal" class="text-lg md:text-xl font-extrabold text-slate-900">-</span></div>
@@ -180,35 +191,8 @@
                     <div class="mt-0.5 num"><span id="grKpiStock" class="text-lg md:text-xl font-extrabold text-slate-900">-</span></div>
                     <p id="grKpiStockSub" class="text-[11px] font-semibold mt-0.5 text-slate-500">-</p>
                 </div>
-                <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl">
-                    <span class="text-[11px] font-bold text-slate-600">처음 기록 대비</span>
-                    <div class="mt-0.5 num"><span id="grKpiGrowth" class="text-lg md:text-xl font-extrabold text-slate-900">-</span></div>
-                    <p id="grKpiGrowthSub" class="text-[11px] font-semibold mt-0.5 text-slate-500">-</p>
-                </div>
             </div>
             <div id="grTrendChart"></div>
-            <div class="flex flex-row items-center justify-between gap-2 pt-1">
-                <p class="text-xs font-bold text-slate-700">월별 상세</p>
-                <div class="flex items-center gap-1.5">
-                    <select id="grYear" onchange="onGrYearChange(this.value)" class="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-md px-2 py-1.5 font-bold focus:ring-2 focus:ring-blue-500"></select>
-                    <select id="grMonth" onchange="onGrMonthChange(this.value)" class="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-md px-2 py-1.5 font-bold focus:ring-2 focus:ring-blue-500"></select>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <div class="md:col-span-7 border border-slate-200/60 rounded-xl overflow-hidden bg-white">
-                    <table class="w-full text-left text-slate-600 text-xs num">
-                        <thead class="text-slate-700 bg-slate-50 border-b border-slate-100">
-                            <tr><th class="px-3 py-2">구성 항목</th><th class="px-3 py-2 text-right">금액 (원)</th><th class="px-3 py-2 text-right">전월비</th></tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 font-medium">
-                            <tr><td class="px-3 py-2 text-slate-900"><span class="inline-block w-2 h-2 rounded-sm bg-[#a855f7] mr-1.5"></span>강록 예금</td><td id="tblGrDeposit" class="px-3 py-2 text-right text-slate-900 font-bold">-</td><td id="dGrDeposit" class="px-3 py-2 text-right">-</td></tr>
-                            <tr><td class="px-3 py-2 text-slate-900"><span class="inline-block w-2 h-2 rounded-sm bg-[#ec4899] mr-1.5"></span>강록 주식 계좌</td><td id="tblGrStock" class="px-3 py-2 text-right text-slate-900 font-bold">-</td><td id="dGrStock" class="px-3 py-2 text-right">-</td></tr>
-                            <tr class="bg-slate-50/50 font-bold text-slate-900"><td class="px-3 py-2 text-slate-800">강록 자산 총계</td><td id="tblGrTotal" class="px-3 py-2 text-right text-blue-600 font-extrabold">-</td><td id="dGrTotal" class="px-3 py-2 text-right">-</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="md:col-span-5 flex items-center justify-center min-h-[160px]"><div id="gangrokPieChart" class="w-full max-w-[260px]"></div></div>
-            </div>
         </section>
     </main>
 
@@ -324,10 +308,13 @@
             document.getElementById("metricYearlyIncrement").innerText = data.metrics.avgYearlyIncrement.toLocaleString();
 
             buildGangrokList();
-            initYearMonthSelectors(); initGangrokSelectors();
+            initYearMonthSelectors();
             renderGangrokSummary();
             renderTrendChart();
-            renderYearlyChart();
+            var yd = document.getElementById("yearlyDetails");
+            yd.addEventListener("toggle", function() {   // 펼칠 때 처음 한 번만 그림 (접힌 상태에선 폭이 0이라)
+                if (yd.open && !yearlyChart) renderYearlyChart();
+            });
 
             // 아파트 카드
             var timelineHtml = "";
@@ -504,13 +491,11 @@
             var last = grList[grList.length - 1], first = grList[0], prev = grList.length > 1 ? grList[grList.length - 2] : null;
             document.getElementById("grLatestLabel").innerText = "(" + ymLabel(last.date) + " 기준)";
             document.getElementById("grKpiTotal").innerText = eok(last.total);
-            setDiff(document.getElementById("grKpiTotalDiff"), prev ? last.total - prev.total : null, " 직전 기록비");
+            setDiff(document.getElementById("grKpiTotalDiff"), prev ? last.total - prev.total : null, " 전월비");
             document.getElementById("grKpiCash").innerText = eok(last.cash);
             document.getElementById("grKpiCashSub").innerText = last.total > 0 ? "비중 " + (last.cash / last.total * 100).toFixed(1) + "%" : "-";
             document.getElementById("grKpiStock").innerText = eok(last.stock);
             document.getElementById("grKpiStockSub").innerText = last.total > 0 ? "비중 " + (last.stock / last.total * 100).toFixed(1) + "%" : "-";
-            document.getElementById("grKpiGrowth").innerText = signedEok(last.total - first.total);
-            document.getElementById("grKpiGrowthSub").innerText = ymLabel(first.date) + " " + eok(first.total) + "에서";
 
             var mobile = isMobile();
             if (grTrendChart) grTrendChart.destroy();
@@ -526,7 +511,7 @@
                 markers: { size: [0, 0, 3] },
                 labels: grList.map(function(x) { return x.date; }),
                 legend: { position: 'top', horizontalAlign: 'left', fontSize: '11px' },
-                dataLabels: { enabled: !mobile, enabledOnSeries: [2], formatter: function(v, o) { return o.dataPointIndex === grList.length - 1 ? formatAssetUnit(v) : ""; }, style: { fontSize: '10px' }, background: { enabled: true, foreColor: '#fff', borderRadius: 3 } },
+                dataLabels: { enabled: true, enabledOnSeries: [2], formatter: function(v, o) { return (!mobile || o.dataPointIndex % 2 === (grList.length - 1) % 2) ? formatAssetUnit(v) : ""; }, style: { fontSize: mobile ? '9px' : '10px' }, background: { enabled: true, foreColor: '#fff', borderRadius: 3 } },
                 xaxis: { labels: { rotate: -45, hideOverlappingLabels: true, style: { fontSize: '10px' } } },
                 yaxis: { min: 0, forceNiceScale: true, labels: { style: { fontSize: '10px' }, formatter: function(v) { return formatAssetUnit(v); } } },
                 tooltip: { shared: true, intersect: false, y: { formatter: function(v) { return v == null ? "-" : Math.round(v).toLocaleString() + "만원"; } } }
@@ -625,10 +610,11 @@
                 strokeW = [0, 0, 0, 0, 3]; lineIdx = 4;
             } else if (trendMode === "estate") {
                 series = [
-                    { name: '부동산 순가치 (주담대 제외)', type: 'column', data: d.estate }
+                    { name: '부동산 순가치 (주담대 제외)', type: 'column', data: d.estate },
+                    { name: '추이', type: 'line', data: d.estate }
                 ];
-                colors = ['#3b82f6'];
-                strokeW = [0]; lineIdx = 0;
+                colors = ['#93c5fd', '#1d4ed8'];
+                strokeW = [0, 3]; lineIdx = 1;
             } else {
                 series = [
                     { name: '주식/코인', type: 'column', data: d.invest },
