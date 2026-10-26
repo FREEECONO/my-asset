@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -70,7 +69,7 @@
         </section>
 
         <section class="bg-white p-4 md:p-6 rounded-xl shadow-xs border border-slate-100">
-            <h2 class="text-sm md:text-base font-bold text-slate-900 mb-4">💡 자산 성장 기여도 분석 <span class="text-[10px] font-medium text-slate-400 ml-0.5">(2020년 11월 대비)</span></h2>
+            <h2 class="text-sm md:text-base font-bold text-slate-900 mb-4">💡 자산 성장 기여도 분석 <span id="baseLabel" class="text-[10px] font-medium text-slate-400 ml-0.5"></span></h2>
             
             <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
                 <div class="col-span-2 lg:col-span-1 bg-slate-50 border border-slate-200 p-4 rounded-xl flex flex-col justify-center">
@@ -100,6 +99,7 @@
                         <div><span id="livePensionProfit" class="text-lg md:text-xl font-extrabold text-amber-900">-</span><span class="text-[10px] font-bold text-amber-800">원</span></div>
                         <span id="ratioPension" class="text-[10px] font-bold text-amber-500 bg-amber-100 px-1.5 py-0.5 rounded-sm w-max">-%</span>
                     </div>
+                    <p id="pensionAsOf" class="text-[9px] text-amber-700/80 mt-1"></p>
                 </div>
                 <div class="bg-emerald-50/50 border border-emerald-100 p-4 rounded-xl flex flex-col justify-center relative overflow-hidden">
                     <div class="absolute right-0 top-0 h-full w-1.5 bg-emerald-400"></div>
@@ -197,15 +197,66 @@
 
         var globalDashboardData = null; var pieChartObject = null; var trendChart = null; var gangrokPieChart = null;
         
-        document.addEventListener("DOMContentLoaded", function() {
-            fetch(GAS_API_URL)
-                .then(response => response.json())
-                .then(data => { onDataLoadSuccess(data); })
-                .catch(error => { alert("데이터를 불러오지 못했습니다. 구글 앱스 스크립트 연결을 확인해주세요."); });
-        });
+        // ---- 비밀번호 / 오류 / 로딩 화면 ----
+        function getKey() { try { return localStorage.getItem("assetKey") || ""; } catch (e) { return ""; } }
+        function saveKey(k) { try { localStorage.setItem("assetKey", k); } catch (e) {} }
+        function clearKey() { try { localStorage.removeItem("assetKey"); } catch (e) {} }
+        function escHtml(t) { return String(t).replace(/[&<>"']/g, function(c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+        function showOverlay(html) {
+            var o = document.getElementById("loadingOverlay");
+            o.innerHTML = html; o.style.display = "flex";
+        }
+        function showLoading() {
+            showOverlay('<div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-200 h-10 w-10 mb-3"></div><p class="text-xs font-semibold text-slate-600">자산 포트폴리오 안전 연결 중...</p>');
+        }
+        function showLogin(msg) {
+            showOverlay('<form id="loginForm" class="w-full max-w-xs space-y-3">' +
+                '<p class="text-sm font-bold text-slate-800">🔒 비밀번호를 입력해주세요</p>' +
+                (msg ? '<p class="text-[11px] font-semibold text-rose-600">' + escHtml(msg) + '</p>' : '') +
+                '<input id="keyInput" type="password" autocomplete="current-password" class="w-full border border-slate-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500" />' +
+                '<button type="submit" class="w-full bg-blue-600 text-white text-sm font-bold rounded-md py-2">열기</button></form>');
+            document.getElementById("loginForm").addEventListener("submit", function(ev) {
+                ev.preventDefault();
+                var k = document.getElementById("keyInput").value.trim();
+                if (k) loadData(k);
+            });
+            document.getElementById("keyInput").focus();
+        }
+        function showError(msg) {
+            showOverlay('<p class="text-sm font-bold text-slate-800 mb-1">데이터를 불러오지 못했습니다</p>' +
+                '<p class="text-[11px] text-slate-500 mb-3 max-w-xs break-words">' + escHtml(msg) + '</p>' +
+                '<button id="retryBtn" class="bg-blue-600 text-white text-xs font-bold rounded-md px-4 py-2">다시 시도</button>');
+            document.getElementById("retryBtn").addEventListener("click", function() { loadData(getKey()); });
+        }
+
+        function loadData(key) {
+            showLoading();
+            var url = GAS_API_URL + (key ? "?key=" + encodeURIComponent(key) : "");
+            fetch(url)
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.status === "error") {
+                        if (String(data.message).indexOf("접근 권한") !== -1) {
+                            clearKey();
+                            showLogin(key ? "비밀번호가 맞지 않습니다." : "");
+                        } else {
+                            showError(data.message);
+                        }
+                        return;
+                    }
+                    if (key) saveKey(key);
+                    try { onDataLoadSuccess(data); }
+                    catch (e) { showError("화면을 그리는 중 오류가 발생했습니다: " + e.message); }
+                })
+                .catch(function() {
+                    showError("인터넷 연결 또는 앱스 스크립트 배포 상태를 확인해주세요.");
+                });
+        }
+
+        document.addEventListener("DOMContentLoaded", function() { loadData(getKey()); });
 
 function onDataLoadSuccess(data) {
-            if (data.status === "error") { return alert("에러: " + data.message); }
             globalDashboardData = data;
 
             var years = Object.keys(data.fullMonthlyRecords).sort();
@@ -215,6 +266,8 @@ function onDataLoadSuccess(data) {
             var startNetAsset = data.fullMonthlyRecords[firstYear][firstMonth].netAssetRaw;
             var endNetAsset = data.latest.netAssetRaw;
             
+            document.getElementById("baseLabel").innerText = "(" + firstYear + "년 " + parseInt(firstMonth, 10) + "월 대비)";
+
             // 1. 총 순자산 증가액
             var totalAssetIncrease = endNetAsset - startNetAsset;
             
@@ -232,6 +285,11 @@ function onDataLoadSuccess(data) {
             // 4. 연금저축+ISA 미실현손익
             var pensionProfit = data.latest.pensionProfit || 0;
             
+            var asOfEl = document.getElementById("pensionAsOf");
+            if (data.latest.pensionProfitAsOf && data.latest.pensionProfitAsOf !== data.latest.date) {
+                asOfEl.innerText = "※ " + data.latest.pensionProfitAsOf + " 기준 (이후 원금 미입력)";
+            } else { asOfEl.innerText = ""; }
+
             // 5. 순수 저축
             var pureSavings = totalAssetIncrease - totalEstateProfit - stockProfit - pensionProfit;
 
@@ -474,5 +532,3 @@ function onDataLoadSuccess(data) {
     </script>
 </body>
 </html>
-
-```
