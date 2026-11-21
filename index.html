@@ -99,6 +99,7 @@
                             <tr><td class="px-3 py-2 text-slate-900"><span class="inline-block w-2 h-2 rounded-sm bg-[#10b981] mr-1.5"></span>예적금</td><td id="tblDeposit" class="px-3 py-2 text-right text-slate-900 font-bold">-</td><td id="pctDeposit" class="px-3 py-2 text-right text-slate-500">-</td></tr>
                             <tr><td class="px-3 py-2 text-slate-900"><span class="inline-block w-2 h-2 rounded-sm bg-[#64748b] mr-1.5"></span>노후자금 (연금·ISA)</td><td id="tblRetire" class="px-3 py-2 text-right text-slate-900 font-bold">-</td><td id="pctRetire" class="px-3 py-2 text-right text-slate-500">-</td></tr>
                             <tr class="bg-amber-50/50"><td class="px-3 py-2 text-amber-800 font-bold">금융자산 소계</td><td id="tblFin" class="px-3 py-2 text-right text-amber-900 font-extrabold">-</td><td id="pctFin" class="px-3 py-2 text-right text-amber-700 font-bold">-</td></tr>
+                            <tr id="rowOtherDebt" style="display:none"><td class="px-3 py-2 text-rose-700">기타 대출 (토스·끌올 등)</td><td id="tblOtherDebt" class="px-3 py-2 text-right text-rose-700 font-bold">-</td><td id="pctOtherDebt" class="px-3 py-2 text-right text-rose-500">-</td></tr>
                             <tr class="bg-slate-50 font-bold"><td class="px-3 py-2 text-slate-800">총 순자산</td><td id="tblNet" class="px-3 py-2 text-right text-emerald-700 font-extrabold">-</td><td class="px-3 py-2 text-right text-slate-500">100%</td></tr>
                         </tbody>
                     </table>
@@ -319,6 +320,9 @@
             el.className = "text-[11px] font-semibold mt-0.5 " + (v >= 0 ? "text-emerald-600" : "text-rose-600");
         }
         function finOf(r) { return (r.invest || 0) + (r.deposit || 0) + (r.retirementAmt || 0); }
+        // 주담대 외 대출(토스·끌올·기타): 순자산 = 금융자산 + 부동산(주담대 제외) − 기타 대출
+        function otherDebtOf(r) { return Math.max(0, Math.round(finOf(r) + (r.estate || 0) - (r.netAssetRaw || 0))); }
+        function finNetOf(r) { return finOf(r) - otherDebtOf(r); }   // 기타 대출을 뺀 금융자산
         function ymShift(ym, months) {
             var p = ym.split("-"), y = +p[0], m = +p[1] - 1 + months;
             y += Math.floor(m / 12); m = ((m % 12) + 12) % 12;
@@ -448,6 +452,10 @@
             document.getElementById("tblRetire").innerText = won(r.retirementAmt); document.getElementById("pctRetire").innerText = pct(r.retirementAmt);
             document.getElementById("tblFin").innerText = won(fin);           document.getElementById("pctFin").innerText = pct(fin);
             document.getElementById("tblNet").innerText = won(net);
+            var other = otherDebtOf(r);   // 순자산에서 빠지는 주담대 외 대출
+            document.getElementById("rowOtherDebt").style.display = other > 0 ? "" : "none";
+            document.getElementById("tblOtherDebt").innerText = "−" + won(other);
+            document.getElementById("pctOtherDebt").innerText = net > 0 ? "−" + (other / net * 100).toFixed(1) + "%" : "-";
             updatePieChartInstance(r.estate, r.invest, r.deposit, r.retirementAmt);
 
             curRec = r;
@@ -459,7 +467,7 @@
         function monthParts(r, prev) {   // 순자산 변화 = 금융자산 변동 + 대출 상환 + 집값 변동
             var dNet = r.netAssetRaw - prev.netAssetRaw, dFin = finOf(r) - finOf(prev);
             var loan = prev.debtRaw - r.debtRaw;           // 부채가 줄면 +
-            var house = (r.estate - prev.estate) - loan;     // 부동산 순가치 변동 중 상환을 뺀 나머지
+            var house = dNet - dFin - loan;                  // 나머지 = 집 시세 변동 (세 칸 합이 항상 순자산 변화와 같도록)
             return { net: dNet, fin: dFin, loan: loan, house: house };
         }
         function renderScore(r, prev) {
@@ -525,7 +533,7 @@
                 desc.innerText = "비교할 이전 기록이 없습니다.";
                 body.innerHTML = ""; return;
             }
-            var fin = finOf(r), dNet = r.netAssetRaw - base.netAssetRaw, dEst = r.estate - base.estate, dFin = fin - finOf(base);
+            var fin = finOf(r), dNet = r.netAssetRaw - base.netAssetRaw, dEst = r.estate - base.estate, dFin = finNetOf(r) - finNetOf(base);
             desc.innerText = label + " (" + ymLabel(base.date) + " 말 → " + ymLabel(r.date) + " 말). 돈이 있는 곳별로 나눴습니다: 부동산 순가치(시세 + 대출 상환) vs 금융자산(저축 + 투자손익).";
             body.innerHTML = '<div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">' +
                 card("bg-slate-50 border border-slate-200 text-slate-600", "순자산 변화", signedEok(dNet), won(dNet) + "원") +
@@ -754,7 +762,7 @@
                 var sm = i > 0 ? 1 : parseInt(start.date.substring(5), 10), em = parseInt(end.date.substring(5), 10);
                 out.years.push(y + (sm !== 1 ? " (" + sm + "~" + em + "월)" : em !== 12 ? " (~" + em + "월)" : ""));
                 out.estate.push(Math.round((end.estate - start.estate) / 10000));
-                out.fin.push(Math.round((finOf(end) - finOf(start)) / 10000));
+                out.fin.push(Math.round((finNetOf(end) - finNetOf(start)) / 10000));
                 out.net.push(Math.round((end.netAssetRaw - start.netAssetRaw) / 10000));
             });
             return out;
