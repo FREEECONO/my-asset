@@ -185,22 +185,22 @@
             <div id="trendChart" class="pt-1"></div>
         </section>
 
+        <!-- ⑤-1 자산 히스토리 (가로 타임라인) -->
+        <section class="bg-white p-4 md:p-6 rounded-xl border border-slate-100">
+            <div class="flex items-baseline justify-between gap-2 mb-2">
+                <h2 class="text-sm md:text-base font-bold text-slate-900">🧭 자산 히스토리</h2>
+                <p id="histSummary" class="text-[11px] text-slate-500 num"></p>
+            </div>
+            <div id="histScroll" class="overflow-x-auto -mx-1 px-1 pb-1"><div id="histTrack" class="relative"></div></div>
+            <div id="histLegend" class="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-[11px] text-slate-500"></div>
+        </section>
+
         <!-- ⑥ 아파트 -->
         <section class="bg-white p-4 md:p-6 rounded-xl border border-slate-100">
             <h2 class="text-sm md:text-base font-bold text-slate-900 mb-1">🏠 아파트 매수매도 히스토리</h2>
             <p class="text-[11px] text-slate-500 mb-1">보유 기간 · 막대 끝 숫자는 실수익(보유 중이면 평가 수익)</p>
             <div id="estateGanttChart" class="mb-3"></div>
             <div id="estateTimelineContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
-        </section>
-
-        <!-- ⑥-1 자산 형성 히스토리 -->
-        <section class="bg-white p-4 md:p-6 rounded-xl border border-slate-100">
-            <div class="flex items-baseline justify-between gap-2 mb-3">
-                <h2 class="text-sm md:text-base font-bold text-slate-900">📜 자산 형성 히스토리</h2>
-                <p id="historySummary" class="text-[11px] text-slate-500 num"></p>
-            </div>
-            <ol id="historyList" class="relative border-l-2 border-slate-100 ml-2 space-y-4"></ol>
-            <p class="text-[11px] text-slate-400 mt-3">순자산 돌파 시점·최대 하락·아파트 거래·주식 최고 실현 연도는 데이터에서 자동으로 뽑습니다. 자산상세 탭 '메모' 열에 적은 내용도 함께 표시됩니다.</p>
         </section>
 
         <!-- ⑦ 주식 실현손익 -->
@@ -404,7 +404,7 @@
             });
             document.getElementById("estateTimelineContainer").innerHTML = timelineHtml;
             try { renderEstateGantt(data.estateTimeline || []); } catch (e) { console.warn("estate gantt", e); }
-            try { renderHistory(data); } catch (e) { console.warn("history", e); }
+            try { renderHistoryStrip(data); } catch (e) { console.warn("history", e); }
 
             document.getElementById("liveStockCumulative").innerText = signed(data.stockTotalCumulative);
             renderStockChart(data.stockYears, data.stockProfits);
@@ -822,7 +822,7 @@
             }).render();
         }
 
-        // ---- ⑥ 아파트 보유 기간 / ⑥-1 자산 형성 히스토리 ----
+        // ---- ⑥ 아파트 보유 기간 ----
         function parseDay(s) {   // "2020-01-16", "2020.01.16", "2020년 1월 16일" 등 → Date (없으면 null)
             var m = String(s || "").match(/(\d{4})\D+(\d{1,2})(?:\D+(\d{1,2}))?/);
             return m ? new Date(+m[1], +m[2] - 1, m[3] ? +m[3] : 15) : null;
@@ -859,74 +859,86 @@
             estateGantt.render();
         }
 
-        function renderHistory(data) {
-            var ev = [];   // { ym, kind, title, note }
-            var first = recList[0], last = recList[recList.length - 1];
-            if (!first) return;
-            ev.push({ ym: first.date, kind: "start", title: "월별 자산 기록 시작", note: "순자산 " + eok(first.netAssetRaw) + "에서 출발" });
-
-            // 순자산 돌파 시점 (처음 넘은 달)
-            [1, 2, 3, 5, 7, 10, 15, 20, 30, 50].forEach(function(t) {
-                var th = t * 100000000;
-                if (first.netAssetRaw >= th) return;
-                for (var i = 0; i < recList.length; i++) {
-                    if (recList[i].netAssetRaw >= th) {
-                        var mm = (+recList[i].date.slice(0, 4) - +first.date.slice(0, 4)) * 12 + (+recList[i].date.slice(5) - +first.date.slice(5));
-                        ev.push({ ym: recList[i].date, kind: "goal", title: "순자산 " + t + "억 돌파", note: eok(recList[i].netAssetRaw) + " · 기록 시작 " + (mm >= 12 ? Math.floor(mm / 12) + "년 " : "") + (mm % 12 ? mm % 12 + "개월" : "") + " 만" });
-                        break;
-                    }
+        // ---- ⑤-1 자산 히스토리: 가로 타임라인 (배경 = 순자산 흐름) ----
+        var HIST_KIND = {
+            start: { c: "#94a3b8", label: "시작" },
+            goal:  { c: "#059669", label: "순자산 돌파" },
+            buy:   { c: "#2563eb", label: "매수" },
+            sell:  { c: "#0f172a", label: "매도" },
+            drop:  { c: "#e11d48", label: "최대 하락" },
+            memo:  { c: "#a855f7", label: "메모" },
+            now:   { c: "#059669", label: "현재" }
+        };
+        function histEvents(data) {
+            var ev = [], first = recList[0], last = recList[recList.length - 1];
+            if (!first) return ev;
+            function t(ym) { var p = ym.split("-"); return +p[0] + (+p[1] - 1) / 12; }
+            ev.push({ t: t(first.date), ym: first.date, kind: "start", title: "기록 시작", sub: eok(first.netAssetRaw) });
+            [3, 5, 10, 15, 20, 30].forEach(function(g) {
+                var th = g * 1e8; if (first.netAssetRaw >= th) return;
+                for (var i = 0; i < recList.length; i++) if (recList[i].netAssetRaw >= th) {
+                    ev.push({ t: t(recList[i].date), ym: recList[i].date, kind: "goal", title: g + "억 돌파", sub: eok(recList[i].netAssetRaw) }); break;
                 }
             });
-
-            // 최대 하락 구간 (고점 → 저점)
             var peak = recList[0], best = null;
-            recList.forEach(function(r) {
-                if (r.netAssetRaw > peak.netAssetRaw) peak = r;
-                var dd = r.netAssetRaw / peak.netAssetRaw - 1;
-                if (!best || dd < best.dd) best = { dd: dd, peak: peak, trough: r };
-            });
-            if (best && best.dd < -0.05) {
-                var dFin = finOf(best.trough) - finOf(best.peak), dEst = best.trough.estate - best.peak.estate;
-                ev.push({ ym: best.peak.date, kind: "peak", title: "고점 — 순자산 " + eok(best.peak.netAssetRaw), note: "이후 가장 큰 하락이 시작된 달" });
-                ev.push({ ym: best.trough.date, kind: "drop", title: "저점 — 순자산 " + eok(best.trough.netAssetRaw) + " (" + (best.dd * 100).toFixed(0) + "%)",
-                    note: "고점 대비 부동산 순가치 " + signedEok(dEst) + ", 금융자산 " + signedEok(dFin) });
-            }
-
-            // 아파트 거래
+            recList.forEach(function(r) { if (r.netAssetRaw > peak.netAssetRaw) peak = r; var dd = r.netAssetRaw / peak.netAssetRaw - 1; if (!best || dd < best.dd) best = { dd: dd, r: r }; });
+            if (best && best.dd < -0.05) ev.push({ t: t(best.r.date), ym: best.r.date, kind: "drop", title: "최대 하락", sub: (best.dd * 100).toFixed(0) + "% · " + eok(best.r.netAssetRaw) });
             (data.estateTimeline || []).forEach(function(e) {
                 var hold = e.status.trim() === "보유 중", b = parseDay(e.buyDate), s = parseDay(e.sellDate);
-                if (b) ev.push({ ym: ymOfDate(b), kind: "buy", title: e.name + " 매수", note: eok(e.buyAmt) + " 매수 · 실투자 " + eok(e.investAmt) });
-                if (!hold && s) ev.push({ ym: ymOfDate(s), kind: "sell", title: e.name + " 매도", note: eok(e.sellAmt) + " 매도 · 실수익 " + signedEok(e.profit) + " (" + e.totalRoi + ")" });
+                if (b) ev.push({ t: b.getFullYear() + b.getMonth() / 12, ym: ymOfDate(b), kind: "buy", title: e.name, sub: "매수 " + eok(e.buyAmt) });
+                if (!hold && s) ev.push({ t: s.getFullYear() + s.getMonth() / 12, ym: ymOfDate(s), kind: "sell", title: e.name, sub: "매도 " + signedEok(e.profit) });
             });
-
-            // 주식 최고 실현 연도 (단위: 만원)
-            var ys = data.stockYears || [], ps = data.stockProfits || [], bi = -1;
-            ps.forEach(function(p, i) { if (p > 0 && (bi < 0 || p > ps[bi])) bi = i; });
-            if (bi >= 0) ev.push({ ym: String(ys[bi]).replace(/\D/g, "").slice(0, 4) + "-12", kind: "stock", title: String(ys[bi]).replace(/\D/g, "").slice(0, 4) + "년 주식 최고 실현이익", note: "+" + Number(ps[bi]).toLocaleString() + "만원" });
-
-            // '자산상세' 탭 '메모' 열 (그 달 행에 적은 한 줄)
-            recList.forEach(function(r) {
-                if (r.memo && String(r.memo).trim()) ev.push({ ym: r.date, kind: "memo", title: String(r.memo).trim(), note: "" });
-            });
-            (data.milestones || []).forEach(function(m) {
-                var d = parseDay(m.date);
-                if (d && m.title) ev.push({ ym: ymOfDate(d), kind: "memo", title: m.title, note: m.note || "" });
-            });
-
-            ev.push({ ym: last.date, kind: "now", title: "현재 순자산 " + eok(last.netAssetRaw), note: "기록 시작 대비 " + (last.netAssetRaw / first.netAssetRaw).toFixed(1) + "배" });
-
-            var order = { now: 0, memo: 1, goal: 2, sell: 3, buy: 4, stock: 5, drop: 6, peak: 7, start: 8 };
-            ev.sort(function(a, b) { return a.ym < b.ym ? 1 : a.ym > b.ym ? -1 : order[a.kind] - order[b.kind]; });
-            var dot = { now: "bg-emerald-600", goal: "bg-emerald-500", buy: "bg-blue-600", sell: "bg-slate-700", drop: "bg-rose-500", peak: "bg-amber-500", stock: "bg-amber-500", memo: "bg-white border-2 border-slate-400", start: "bg-white border-2 border-slate-400" };
-            var icon = { now: "📍", goal: "🎯", buy: "🏠", sell: "🔑", drop: "📉", peak: "⛰️", stock: "💹", memo: "📝", start: "🌱" };
-            document.getElementById("historyList").innerHTML = ev.map(function(e) {
-                return '<li class="ml-4"><span class="absolute -left-[7px] mt-1.5 w-3 h-3 rounded-full ' + dot[e.kind] + '"></span>' +
-                    '<p class="text-[11px] text-slate-400 num">' + ymLabel(e.ym) + '</p>' +
-                    '<p class="text-xs md:text-sm font-bold text-slate-900">' + icon[e.kind] + ' ' + escHtml(e.title) + '</p>' +
-                    (e.note ? '<p class="text-[11px] md:text-xs text-slate-600">' + escHtml(e.note) + '</p>' : '') + '</li>';
-            }).join("");
-            document.getElementById("historySummary").innerText = ymLabel(first.date) + " ~ " + ymLabel(last.date) + " · " + eok(first.netAssetRaw) + " → " + eok(last.netAssetRaw);
+            recList.forEach(function(r) { if (r.memo) ev.push({ t: t(r.date), ym: r.date, kind: "memo", title: r.memo, sub: "" }); });
+            ev.push({ t: t(last.date), ym: last.date, kind: "now", title: "현재", sub: eok(last.netAssetRaw) });
+            return ev.sort(function(a, b) { return a.t - b.t; });
         }
+        function renderHistoryStrip(data) {
+            var track = document.getElementById("histTrack"), ev = histEvents(data);
+            if (!ev.length) return;
+            var first = recList[0], last = recList[recList.length - 1];
+            document.getElementById("histSummary").innerText = ymLabel(first.date) + " → " + ymLabel(last.date) + " · " + (last.netAssetRaw / first.netAssetRaw).toFixed(1) + "배";
+            var W = Math.max(document.getElementById("histScroll").clientWidth, 760), CW = 112, LANE = 46, mid = 2 * LANE + 38, H = mid + 2 * LANE + 36, pad = CW / 2 + 4;
+            var t0 = Math.floor(ev[0].t), t1 = ev[ev.length - 1].t + 0.25;
+            function x(t) { return pad + (t - t0) / (t1 - t0) * (W - 2 * pad); }
+            // 배경: 순자산 흐름 (위쪽 절반에 옅게)
+            var maxNet = Math.max.apply(null, recList.map(function(r) { return r.netAssetRaw; }));
+            function yNet(v) { return mid - 4 - (v / maxNet) * (mid - 10); }
+            var pts = recList.map(function(r) { var p = r.date.split("-"); return x(+p[0] + (+p[1] - 1) / 12).toFixed(1) + "," + yNet(r.netAssetRaw).toFixed(1); });
+            var svg = '<svg width="' + W + '" height="' + H + '" class="absolute inset-0" aria-hidden="true">' +
+                '<defs><linearGradient id="histG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#10b981" stop-opacity=".18"/><stop offset="1" stop-color="#10b981" stop-opacity="0"/></linearGradient></defs>' +
+                '<path d="M' + pts[0].split(",")[0] + ',' + mid + 'L' + pts.join("L") + 'L' + pts[pts.length - 1].split(",")[0] + ',' + mid + 'Z" fill="url(#histG)"/>' +
+                '<path d="M' + pts.join("L") + '" fill="none" stroke="#10b981" stroke-opacity=".45" stroke-width="1.5"/>';
+            for (var y = Math.ceil(t0); y <= t1; y++) {
+                svg += '<line x1="' + x(y) + '" x2="' + x(y) + '" y1="' + (mid - 5) + '" y2="' + (mid + 5) + '" stroke="#cbd5e1"/>' +
+                       '<text x="' + (x(y) + 3) + '" y="' + (mid + 14) + '" font-size="10" fill="#94a3b8">' + y + '</text>';
+            }
+            svg += '<line x1="' + (pad - 10) + '" x2="' + (W - pad + 10) + '" y1="' + mid + '" y2="' + mid + '" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round"/></svg>';
+            // 카드 배치: 위 2줄, 아래 2줄 중 겹치지 않는 곳
+            var lanes = [-1, 1, -2, 2], lastX = {}, html = "";
+            ev.forEach(function(e) {
+                var cx = x(e.t), lane = lanes[0];
+                for (var i = 0; i < lanes.length; i++) { if (lastX[lanes[i]] === undefined || cx - lastX[lanes[i]] > CW + 6) { lane = lanes[i]; break; } }
+                lastX[lane] = cx;
+                var k = HIST_KIND[e.kind], up = lane < 0, dist = Math.abs(lane) * LANE;
+                var top = up ? mid - dist - 30 : mid + dist - 16;
+                var stemTop = up ? top + 34 : mid + 5, stemH = up ? mid - 5 - (top + 34) : top - mid - 5;
+                html += '<div class="absolute" style="left:' + cx + 'px;top:' + stemTop + 'px;height:' + Math.max(0, stemH) + 'px;border-left:1px dashed ' + k.c + '66"></div>' +
+                    '<div class="absolute rounded-full" title="' + escHtml(ymLabel(e.ym)) + '" style="left:' + (cx - 5) + 'px;top:' + (mid - 5) + 'px;width:10px;height:10px;background:' + k.c + ';box-shadow:0 0 0 3px #fff"></div>' +
+                    '<div class="absolute text-center leading-tight" style="left:' + (cx - CW / 2) + 'px;top:' + top + 'px;width:' + CW + 'px">' +
+                    '<div class="inline-block max-w-full bg-white rounded-md px-1.5 py-1 border" style="border-color:' + k.c + '40">' +
+                    '<p class="text-[9px] num text-slate-400">' + e.ym.replace("-", ".") + '</p>' +
+                    '<p class="text-[11px] font-bold truncate" style="color:' + k.c + '">' + escHtml(e.title) + '</p>' +
+                    (e.sub ? '<p class="text-[10px] num text-slate-600 truncate">' + escHtml(e.sub) + '</p>' : '') + '</div></div>';
+            });
+            track.style.width = W + "px"; track.style.height = H + "px";
+            track.innerHTML = svg + html;
+            var sc = document.getElementById("histScroll"); sc.scrollLeft = sc.scrollWidth;   // 최근이 보이게
+            var used = {}; ev.forEach(function(e) { used[e.kind] = 1; });
+            document.getElementById("histLegend").innerHTML = Object.keys(HIST_KIND).filter(function(k) { return used[k] && k !== "start" && k !== "now"; }).map(function(k) {
+                return '<span class="inline-flex items-center gap-1"><i class="inline-block w-2 h-2 rounded-full" style="background:' + HIST_KIND[k].c + '"></i>' + HIST_KIND[k].label + '</span>';
+            }).join("") + '<span class="inline-flex items-center gap-1"><i class="inline-block w-3 h-[2px] bg-emerald-500/50"></i>순자산 흐름</span>';
+        }
+        var histRT; window.addEventListener("resize", function() { if (!globalDashboardData) return; clearTimeout(histRT); histRT = setTimeout(function() { try { renderHistoryStrip(globalDashboardData); } catch (e) {} }, 200); });
 
         // ---- ⑦-1 연소득 · 세금 ('연소득' 탭 → data.income = [{year, income, tax}], 단위: 원) ----
         var incomeChart = null;
