@@ -212,6 +212,19 @@
             <div id="stockProfitChart"></div>
         </section>
 
+        <!-- ⑦-1 연소득 · 세금 -->
+        <section id="incomeSection" class="bg-white p-4 md:p-6 rounded-xl border border-slate-100 space-y-3" style="display:none">
+            <h2 class="text-sm md:text-base font-bold text-slate-900">💼 연소득 · 세금 <span class="text-[11px] font-medium text-slate-400 ml-0.5">(세전 총급여)</span></h2>
+            <div id="incomeKpis" class="grid grid-cols-2 lg:grid-cols-4 gap-2.5"></div>
+            <div id="incomeChart"></div>
+            <details class="text-xs"><summary class="cursor-pointer text-slate-500 font-semibold">연도별 표 보기</summary>
+                <div class="overflow-x-auto mt-2"><table class="w-full text-[11px] md:text-xs num"><thead><tr class="text-slate-500 border-b border-slate-100">
+                    <th class="text-left px-2 py-1.5">연도</th><th class="text-right px-2">연소득</th><th class="text-right px-2">세금</th><th class="text-right px-2">실효세율</th><th class="text-right px-2">순자산 증가</th><th class="text-right px-2">소득 대비</th>
+                </tr></thead><tbody id="incomeTable"></tbody></table></div>
+                <p class="text-[11px] text-slate-400 mt-1">순자산 증가에는 집값·주식 변동이 섞여 있어 저축률과는 다릅니다. 기록이 시작된 2020년 11월 이후 연도만 표시합니다.</p>
+            </details>
+        </section>
+
         <!-- ⑧ 강록 자산 -->
         <section class="bg-white p-4 md:p-6 rounded-xl border border-slate-100 space-y-3">
             <h2 class="text-sm md:text-base font-bold text-slate-900">👶 강록 자산 <span id="grLatestLabel" class="text-[11px] font-medium text-slate-400 ml-0.5"></span></h2>
@@ -395,6 +408,7 @@
 
             document.getElementById("liveStockCumulative").innerText = signed(data.stockTotalCumulative);
             renderStockChart(data.stockYears, data.stockProfits);
+            try { renderIncome(data); } catch (e) { console.warn("income", e); }
             document.getElementById("loadingOverlay").style.display = "none";
         }
 
@@ -912,6 +926,49 @@
                     (e.note ? '<p class="text-[11px] md:text-xs text-slate-600">' + escHtml(e.note) + '</p>' : '') + '</li>';
             }).join("");
             document.getElementById("historySummary").innerText = ymLabel(first.date) + " ~ " + ymLabel(last.date) + " · " + eok(first.netAssetRaw) + " → " + eok(last.netAssetRaw);
+        }
+
+        // ---- ⑦-1 연소득 · 세금 ('연소득' 탭 → data.income = [{year, income, tax}], 단위: 원) ----
+        var incomeChart = null;
+        function renderIncome(data) {
+            var list = (data.income || []).filter(function(r) { return r.income > 0; }).sort(function(a, b) { return a.year - b.year; });
+            if (!list.length) return;
+            document.getElementById("incomeSection").style.display = "";
+            var first = list[0], last = list[list.length - 1];
+            var sumInc = 0, sumTax = 0; list.forEach(function(r) { sumInc += r.income; sumTax += r.tax || 0; });
+            var n = last.year - first.year, cagr = n > 0 ? Math.pow(last.income / first.income, 1 / n) - 1 : 0;
+            var net = data.latest.netAssetRaw;
+            document.getElementById("incomeKpis").innerHTML =
+                card("bg-slate-50 border border-slate-200 text-slate-600", last.year + "년 연소득", eok(last.income), "세금 " + eok(last.tax || 0) + " · 실효세율 " + (last.tax / last.income * 100).toFixed(1) + "%") +
+                card("bg-blue-50/50 border border-blue-100 text-blue-700", "소득 연평균 성장", (cagr * 100).toFixed(1) + "%", first.year + " " + eok(first.income) + " → " + last.year + " " + (last.income / first.income).toFixed(1) + "배") +
+                card("bg-amber-50/50 border border-amber-100 text-amber-700", "누적 소득 / 세금", eok(sumInc), "세금 " + eok(sumTax) + " (" + (sumTax / sumInc * 100).toFixed(1) + "%)") +
+                card("bg-emerald-50/50 border border-emerald-100 text-emerald-700", "순자산 ÷ 연소득", (net / last.income).toFixed(1) + "배", "현재 순자산 " + eok(net) + " ÷ " + last.year + "년 소득");
+            // 연말 순자산 (그해 마지막 기록)
+            var yEnd = {}; recList.forEach(function(r) { yEnd[r.date.substring(0, 4)] = r; });
+            document.getElementById("incomeTable").innerHTML = list.slice().reverse().map(function(r) {
+                var e = yEnd[r.year], s = yEnd[r.year - 1] || (e && recList[0].date.substring(0, 4) == r.year ? recList[0] : null);
+                var dNet = (e && s && e !== s) ? e.netAssetRaw - s.netAssetRaw : null;
+                return '<tr class="border-b border-slate-50"><td class="px-2 py-1.5 font-bold text-slate-700">' + r.year + '</td>' +
+                    '<td class="text-right px-2">' + eok(r.income) + '</td><td class="text-right px-2 text-rose-600">' + eok(r.tax || 0) + '</td>' +
+                    '<td class="text-right px-2">' + ((r.tax || 0) / r.income * 100).toFixed(1) + '%</td>' +
+                    '<td class="text-right px-2 ' + (dNet == null ? 'text-slate-300' : dNet >= 0 ? 'text-emerald-700' : 'text-rose-600') + '">' + (dNet == null ? '-' : signedEok(dNet)) + '</td>' +
+                    '<td class="text-right px-2 text-slate-500">' + (dNet == null ? '-' : (dNet / r.income * 100).toFixed(0) + '%') + '</td></tr>';
+            }).join("");
+            if (incomeChart) incomeChart.destroy();
+            incomeChart = new ApexCharts(document.querySelector("#incomeChart"), {
+                series: [{ name: "세후 (연소득 − 세금)", data: list.map(function(r) { return Math.round((r.income - (r.tax || 0)) / 10000); }) },
+                         { name: "세금", data: list.map(function(r) { return Math.round((r.tax || 0) / 10000); }) }],
+                chart: { type: "bar", stacked: true, height: isMobile() ? 240 : 280, toolbar: { show: false }, zoom: { enabled: false } },
+                colors: ["#3b82f6", "#f87171"],
+                plotOptions: { bar: { columnWidth: "55%", borderRadius: 3, borderRadiusApplication: "end", borderRadiusWhenStacked: "last",
+                    dataLabels: { total: { enabled: !isMobile(), formatter: function(v) { return formatAssetUnit(v); }, style: { fontSize: "10px", fontWeight: 700, color: "#334155" } } } } },
+                dataLabels: { enabled: false },
+                legend: { position: "top", horizontalAlign: "left", fontSize: "11px" },
+                xaxis: { categories: list.map(function(r) { return String(r.year); }), labels: { style: { fontSize: "10px" } } },
+                yaxis: { labels: { style: { fontSize: "10px" }, formatter: function(v) { return formatAssetUnit(v); } } },
+                tooltip: { shared: true, intersect: false, y: { formatter: function(v) { return formatAssetUnit(v) + "원"; } } }
+            });
+            incomeChart.render();
         }
 
         // 화면 폭이 모바일 ↔ PC로 바뀌면 추이 차트만 다시 그림
