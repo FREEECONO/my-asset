@@ -295,6 +295,7 @@
                 </div>
                 <p id="inputMsg" class="text-[11px] font-semibold mb-2"></p>
                 <button id="inputSave" type="button" class="w-full bg-blue-600 disabled:bg-slate-300 text-white text-sm font-bold rounded-xl py-3">저장하기</button>
+                <button id="inputDelete" type="button" class="w-full mt-2 text-xs font-bold text-rose-500 py-1.5" style="display:none">🗑 이 달 기록 삭제</button>
             </div>
         </div>
     </div>
@@ -929,6 +930,7 @@
             document.getElementById("inputBackdrop").addEventListener("click", closeInput);
             sel.addEventListener("change", fillInputs);
             document.getElementById("inputSave").addEventListener("click", saveInput);
+            document.getElementById("inputDelete").addEventListener("click", deleteInputMonth);
         }
         function openInput() {
             document.getElementById("inputSheet").style.display = "";
@@ -946,6 +948,7 @@
             var prev = prevM ? sc.rows[prevM] : null;
             var mode = document.getElementById("inputMode");
             mode.className = "text-[11px] mt-1.5 font-semibold " + (isNew ? "text-blue-600" : "text-amber-600");
+            document.getElementById("inputDelete").style.display = (month === sc.lastMonth) ? "" : "none";   // 가장 최근 달만 삭제 가능
             mode.innerText = isNew ? "새 달이에요. " + ymLabel(sc.lastMonth) + " 값으로 미리 채워 뒀어요 — 바뀐 칸만 고치세요."
                                    : "이미 있는 달이에요. 저장하면 덮어쓰고, 이전 값은 시트 '입력로그' 탭에 남아요.";
             var html = "", lastGroup = null;
@@ -1008,6 +1011,24 @@
                 dEl.className = "text-xs font-bold num text-right " + (d >= 0 ? "text-emerald-600" : "text-rose-500");
                 dEl.innerHTML = '<span class="text-slate-400 font-semibold">' + ymLabel(prevM) + ' 대비</span><br>' + signedEok(d);
             } else dEl.innerText = "";
+        }
+        function deleteInputMonth() {
+            var month = document.getElementById("inputMonth").value, msg = document.getElementById("inputMsg"), btn = document.getElementById("inputDelete");
+            if (month !== inputState.lastMonth) return;
+            if (!confirm(ymLabel(month) + " 기록을 시트에서 삭제할까요?\n삭제한 값은 시트 '입력로그' 탭에 남아요.")) return;
+            btn.disabled = true; btn.innerText = "삭제 중...";
+            fetch(GAS_API_URL, { method: "POST", body: JSON.stringify({ key: getKey(), action: "deleteMonth", month: month }) })
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (res.status !== "success") throw new Error(res.message || "삭제 실패");
+                    msg.className = "text-[11px] font-semibold mb-2 text-emerald-600";
+                    msg.innerText = "🗑 " + ymLabel(month) + " 삭제 완료! 새로 불러오는 중...";
+                    setTimeout(function() { location.reload(); }, 700);
+                })
+                .catch(function(e) {
+                    msg.className = "text-[11px] font-semibold mb-2 text-rose-600"; msg.innerText = "삭제하지 못했어요: " + e.message;
+                    btn.disabled = false; btn.innerText = "🗑 이 달 기록 삭제";
+                });
         }
         function saveInput() {
             var btn = document.getElementById("inputSave"), msg = document.getElementById("inputMsg");
