@@ -28,6 +28,8 @@
         .menuTab.active { background: #0f172a; color: #fff; border-color: #0f172a; }
         #menuBar::-webkit-scrollbar { display: none; }
         .menu-off { display: none !important; }
+        @keyframes spin360 { to { transform: rotate(360deg); } }
+        .spinning { display: inline-block; animation: spin360 .8s linear infinite; }
         /* 🙈 금액 숨기기 */
         .priv .amt, .priv input[inputmode="numeric"], .priv .apexcharts-tooltip, .priv .apexcharts-yaxis-label { filter: blur(6px); }
         .priv .amt { user-select: none; }
@@ -49,6 +51,7 @@
                 <p class="hidden sm:block text-[11px] text-slate-500">경훈 · 인희 · 강록 가족의 실시간 자산 트래킹</p>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
+                <button type="button" id="refreshBtn" class="bg-white border border-slate-200 text-xs rounded-md px-2 py-1.5 font-bold text-slate-600" title="새로고침">🔄</button>
                 <button type="button" id="privBtn" class="bg-white border border-slate-200 text-xs rounded-md px-2 py-1.5 font-bold text-slate-600" title="금액 숨기기/보이기">👁️</button>
                 <span class="hidden sm:inline text-[11px] font-semibold text-slate-500">기준월</span>
                 <select id="filterYear" onchange="onYearSelectorChange(this.value)" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-md px-2 py-1.5 font-bold focus:ring-2 focus:ring-blue-500"></select>
@@ -418,7 +421,48 @@
             document.getElementById("retryBtn").addEventListener("click", function() { loadData(getKey()); });
         }
 
+        // ---- 🔄 새로고침: 백그라운드로 받아 둔 뒤 페이지를 다시 그림 (기다리는 화면 없이) ----
+        var loadedAt = 0, dirty = false, refreshing = false;
+        document.addEventListener("input", function(e) { if (e.target && e.target.id !== "filterYear" && e.target.id !== "filterMonth") dirty = true; });
+        function refreshData(auto) {
+            if (refreshing) return;
+            var btn = document.getElementById("refreshBtn");
+            if (dirty && !auto && !confirm("입력 중인 내용이 있어요. 새로고침하면 사라져요. 계속할까요?")) return;
+            refreshing = true; btn.innerHTML = '<span class="spinning">🔄</span>';
+            var key = getKey();
+            fetch(GAS_API_URL + (key ? "?key=" + encodeURIComponent(key) : ""))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.status === "error") throw new Error(data.message);
+                    if (auto && dirty) { refreshing = false; btn.innerText = "🔄"; return; }   // 받는 사이 입력을 시작했으면 그대로 둠
+                    try { sessionStorage.setItem("prefetch", JSON.stringify({ t: Date.now(), data: data })); sessionStorage.setItem("scrollY", String(window.scrollY)); } catch (e) {}
+                    location.reload();
+                })
+                .catch(function(e) {
+                    refreshing = false; btn.innerText = "🔄";
+                    if (!auto) alert("새로고침하지 못했어요: " + (e.message || "인터넷 연결 확인"));
+                });
+        }
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("refreshBtn").addEventListener("click", function() { refreshData(false); });
+        });
+        // 다른 앱을 쓰다 돌아왔을 때 10분 넘게 지났으면 자동 갱신 (입력 중이면 건너뜀)
+        document.addEventListener("visibilitychange", function() {
+            if (document.visibilityState !== "visible" || !loadedAt || Date.now() - loadedAt < 10 * 60 * 1000 || dirty) return;
+            var a = document.activeElement; if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return;
+            refreshData(true);
+        });
+
         function loadData(key) {
+            var pre = null;
+            try { pre = JSON.parse(sessionStorage.getItem("prefetch") || "null"); sessionStorage.removeItem("prefetch"); } catch (e) {}
+            if (pre && pre.data && Date.now() - pre.t < 60000) {   // 새로고침 버튼으로 미리 받아 둔 데이터
+                try {
+                    onDataLoadSuccess(pre.data); loadedAt = Date.now();
+                    var y = +(sessionStorage.getItem("scrollY") || 0); if (y) setTimeout(function() { window.scrollTo(0, y); }, 50);
+                    return;
+                } catch (e) { console.warn("prefetch", e); }
+            }
             showLoading();
             var url = GAS_API_URL + (key ? "?key=" + encodeURIComponent(key) : "");
             fetch(url)
@@ -434,7 +478,7 @@
                         return;
                     }
                     if (key) saveKey(key);
-                    try { onDataLoadSuccess(data); }
+                    try { onDataLoadSuccess(data); loadedAt = Date.now(); }
                     catch (e) { showError("화면을 그리는 중 오류가 발생했습니다: " + e.message); }
                 })
                 .catch(function() {
@@ -1308,7 +1352,7 @@
                 document.getElementById("histSrc").innerText = "· 출처 " + Object.keys(cnt).map(function(k) { return k + " " + cnt[k]; }).join(", "); }
             var shown = list.slice();
             if (holdSort === "buy") {
-                var gs = {}; shown.forEach(function(x) { gs[x.ticker] = sigScore(hist.series[x.ticker]); });
+                var gs = {}; shown.forEach(function(x) { gs[x.ticker] = sigScore(hist.series[x.ticker], x); });
                 shown.sort(function(a, b) { return sigCmp(gs[a.ticker], gs[b.ticker]); });
             }
             document.getElementById("indStock").innerHTML =
@@ -1328,7 +1372,7 @@
                     b.innerText = open ? "접기" : "🔎 정밀 분석 보기";
                     if (open && !bx.dataset.done) {
                         try {
-                            bx.innerHTML = '<div class="dchart"></div>' + deepAnalysis(x, hist.series[t]); initDeepCharts(bx.querySelector(".dchart"), x, hist);
+                            bx.innerHTML = '<div class="dchart"></div>' + deepAnalysis(x, withLive(hist.series[t], x)); initDeepCharts(bx.querySelector(".dchart"), x, hist);
                             var btb = bx.querySelector(".btBtn");
                             if (btb) btb.addEventListener("click", function() {
                                 var box = bx.querySelector(".btBox"); box.innerHTML = '<p class="text-[11px] text-slate-400 py-3 text-center">5년 일별 시세 불러와 계산하는 중...</p>';
@@ -1375,7 +1419,7 @@
                 var head = isWatch ? ' <span class="num text-[11px] font-semibold text-slate-500">' + (x.price == null ? "" : (isUsd ? "$" + x.price.toFixed(2) : x.price.toLocaleString() + "원")) + ' <span class="' + upDn(x.chg) + '">' + pctTxt(x.chg, 2) + '</span></span>' : '';
                 return '<div class="rounded-xl border border-slate-100 p-3">' +
                     '<div class="flex items-center justify-between gap-2 mb-1"><p class="text-sm font-bold text-slate-900 truncate">' + escHtml(x.name) + head + '</p>' +
-                    '<div class="flex flex-wrap justify-end gap-1 shrink-0">' + sigBadge(sigScore(hist.series[x.ticker])) + (ranked.length > 1 && rk[x.ticker] ? '<span class="text-[10px] font-bold rounded px-1.5 py-0.5 bg-violet-50 text-violet-600" title="12-1개월 모멘텀 기준 이 목록 안 순위">모멘텀 ' + rk[x.ticker] + '/' + ranked.length + '위</span>' : '') + rsiTag + '<span class="text-[10px] font-bold rounded px-1.5 py-0.5 ' + tr[1] + '">' + tr[0] + '</span></div></div>' +
+                    '<div class="flex flex-wrap justify-end gap-1 shrink-0">' + sigBadge(sigScore(hist.series[x.ticker], x)) + (ranked.length > 1 && rk[x.ticker] ? '<span class="text-[10px] font-bold rounded px-1.5 py-0.5 bg-violet-50 text-violet-600" title="12-1개월 모멘텀 기준 이 목록 안 순위">모멘텀 ' + rk[x.ticker] + '/' + ranked.length + '위</span>' : '') + rsiTag + '<span class="text-[10px] font-bold rounded px-1.5 py-0.5 ' + tr[1] + '">' + tr[0] + '</span></div></div>' +
                     levBanner(x) + sparkSvg(x, o) +
                     '<p class="text-[9px] text-slate-400 mb-1.5">— 가격 · <span class="text-slate-400">회색 60일 평균</span>' + (isWatch ? '' : ' · <span class="text-amber-500">점선 내 평단</span>') + (o.n < 200 ? ' · 상장/기록 ' + o.n + '일' : '') + '</p>' +
                     '<div class="grid grid-cols-4 gap-1">' +
@@ -1401,7 +1445,7 @@
                 .then(function(r) { return r.json(); })
                 .then(function(r) {
                     if (r.status !== "success") throw new Error(r.message || "시세 없음");
-                    ts.forEach(function(t) { var g = sigScore(r.series[t]); if (g) watchSig[t] = g; });
+                    watch.forEach(function(x) { var g = sigScore(r.series[x.ticker], x); if (g) watchSig[x.ticker] = g; });
                     watchSigState = "done"; renderWatch(watch);
                 })
                 .catch(function(e) { watchSigState = "error:" + e.message; renderWatch(watch); });
@@ -1702,8 +1746,23 @@
                 ]
             };
         }
+        // 일별 시세의 마지막 봉을 '지금 시세'(보유종목 탭의 현재가, 최대 20분 지연)로 맞춤
+        //  - 마지막 종가 ≈ 전일 종가(현재가 ÷ (1+전일대비)) → 오늘 봉이 없음 → 오늘 봉 추가
+        //  - 끝에서 두 번째 종가 ≈ 전일 종가 → 마지막이 오늘 봉(캐시 때문에 예전 값일 수 있음) → 현재가로 교체
+        function withLive(S0, x) {
+            if (!S0 || !S0.c || !x || x.price == null || x.chg == null) return S0;
+            var n = S0.c.length; if (n < 2) return S0;
+            var px = +x.price, prev = px / (1 + +x.chg), near = function(a) { return a != null && Math.abs(a / prev - 1) < 0.002; };
+            var S = {}; ["d", "o", "h", "l", "c", "v"].forEach(function(k) { S[k] = (S0[k] || []).slice(); });
+            var td = new Date(), today = td.getFullYear() + "-" + String(td.getMonth() + 1).padStart(2, "0") + "-" + String(td.getDate()).padStart(2, "0");
+            if (Math.abs(S.c[n - 1] / px - 1) < 0.0005) { S.live = "now"; return S; }   // 이미 지금 시세
+            if (near(S.c[n - 1])) { S.d.push(today); S.o.push(prev); S.h.push(Math.max(px, prev)); S.l.push(Math.min(px, prev)); S.c.push(px); S.v.push(null); S.live = "add"; return S; }
+            if (near(S.c[n - 2])) { S.c[n - 1] = px; S.h[n - 1] = Math.max(S.h[n - 1], px); S.l[n - 1] = Math.min(S.l[n - 1], px); S.live = "fix"; return S; }
+            return S0;   // 판단이 안 되면(휴장·데이터 어긋남) 받은 그대로
+        }
         // 일별 OHLC → {nb: 매수 검토 충족 수, nh: 과열 충족 수}
-        function sigScore(S0) {
+        function sigScore(S0, x) {
+            S0 = withLive(S0, x);
             if (!S0 || !S0.c) return null;
             var S = { h: [], l: [], c: [] };
             S0.c.forEach(function(c, i) { if (c != null && S0.h[i] != null && S0.l[i] != null) { S.h.push(S0.h[i]); S.l.push(S0.l[i]); S.c.push(c); } });
@@ -1786,7 +1845,7 @@
             var s1 = stTxt(st1), s2 = stTxt(st2), s3 = stTxt(st3);
             var stCls = function(st) { return st.k <= 20 ? "text-blue-600" : st.k >= 80 ? "text-rose-600" : ""; };
             return '<div class="rounded-xl bg-slate-50 p-3 space-y-3 text-[11px]">' +
-                '<div><p class="font-bold text-slate-800 mb-1">📋 종목 요약 <span class="font-medium text-slate-400">' + S.d[L] + ' 종가 기준</span></p>' +
+                '<div><p class="font-bold text-slate-800 mb-1">📋 종목 요약 <span class="font-medium text-slate-400">' + (S0.live ? '지금 시세 기준 (장중이면 최대 20분 지연)' : S.d[L] + ' 종가 기준') + '</span></p>' +
                 '<p class="num"><b class="text-sm">' + P(C) + '</b> <b class="' + upDn(chg) + '">' + (chg > 0 ? "+" : chg < 0 ? "−" : "") + P(Math.abs(chg)).replace("−", "") + ' (' + pctTxt(chgP, 2) + ')</b> · 시가 ' + P(O) + ' / 고가 ' + P(H) + ' / 저가 ' + P(Lo) + '</p>' +
                 (V ? '<p class="num text-slate-600">거래량 ' + (V / 1e4 >= 1 ? Math.round(V / 1e4).toLocaleString() + "만" : V.toLocaleString()) + '주' + (pV ? ' (전일 대비 ' + pctTxt(V / pV - 1, 0) + ')' : '') + (vAvg ? ' · 20일 평균의 ' + (V / vAvg).toFixed(1) + '배' : '') + ' · <b>' + candle + '</b></p>' : '') +
                 '<p class="text-slate-700 mt-1"><b>추세:</b> ' + [trendShort, trendMid].filter(Boolean).join(" · ") + over + ' — ' + story + '</p></div>' +
