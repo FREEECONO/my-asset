@@ -225,6 +225,14 @@
             <div id="estateTimelineContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
         </section>
 
+        <!-- ⑥-2 이사 안 했다면? -->
+        <section data-sec="estate" id="whatIfSection" class="bg-white p-4 md:p-6 rounded-xl border border-slate-100 space-y-3" style="display:none">
+            <div><h2 class="text-sm md:text-base font-bold text-slate-900">🔀 이사 안 했다면?</h2>
+            <p class="text-[11px] text-slate-500">그 집에 계속 살았다면 지금까지 부동산으로 얼마를 벌었을지, 실제 선택과 비교해요.</p></div>
+            <div id="whatIfInputs" class="space-y-2"></div>
+            <div id="whatIfBody"></div>
+        </section>
+
         <!-- ⑦-0 내 주식 (보유종목 탭) -->
         <section data-sec="stock" id="holdSection" class="bg-white p-4 md:p-6 rounded-xl border border-slate-100 space-y-3" style="display:none">
             <div class="flex flex-wrap items-center justify-between gap-2">
@@ -520,6 +528,7 @@
             });
             document.getElementById("estateTimelineContainer").innerHTML = timelineHtml;
             try { renderEstateGantt(data.estateTimeline || []); } catch (e) { console.warn("estate gantt", e); }
+            try { renderWhatIf(data); } catch (e) { console.warn("whatif", e); }
             try { renderHistoryStrip(data); } catch (e) { console.warn("history", e); }
             try { setupInput(data); } catch (e) { console.warn("input", e); }
             try { setupBudget(data); } catch (e) { console.warn("budget", e); }
@@ -1956,6 +1965,74 @@
                 })
                 .catch(function(e) { msg.className = "flex-1 text-[11px] font-semibold text-rose-600 px-1"; msg.innerText = "저장하지 못했어요: " + e.message; })
                 .then(function() { btn.disabled = false; btn.innerText = "저장"; });
+        }
+
+        // ---- 🔀 이사 안 했다면? (팔았던 집의 '현재 시세(가정)'으로 계속 보유 시나리오 계산) ----
+        function renderWhatIf(data) {
+            var list = (data.estateTimeline || []).map(function(e) { var o = {}; for (var k in e) o[k] = e[k]; o.b = parseDay(e.buyDate); o.s = parseDay(e.sellDate); return o; })
+                .filter(function(e) { return e.b; }).sort(function(a, b) { return a.b - b.b; });
+            var sold = list.filter(function(e) { return e.status.trim() !== "보유 중"; }), held = list.filter(function(e) { return e.status.trim() === "보유 중"; })[0];
+            if (!sold.length || !held) return;
+            document.getElementById("whatIfSection").style.display = "";
+            // 입력칸: 팔았던 집마다 지금 시세
+            document.getElementById("whatIfInputs").innerHTML = sold.map(function(e) {
+                return '<div class="flex flex-wrap items-center gap-2 bg-slate-50 rounded-lg px-3 py-2"><span class="text-xs font-bold text-slate-700 w-28 shrink-0">' + escHtml(e.name) + '</span>' +
+                    '<span class="text-[11px] text-slate-500">지금 시세</span><input data-name="' + escHtml(e.name) + '" inputmode="numeric" class="wiInp num text-sm font-bold text-right border border-slate-300 rounded-md px-2 py-1 w-36 bg-white" placeholder="예: 520,000,000" value="' + (e.nowPrice ? Number(e.nowPrice).toLocaleString() : '') + '">' +
+                    '<span class="wiHint num text-[11px] text-slate-400">' + (e.nowPrice ? eok(e.nowPrice) : '') + '</span>' +
+                    '<button type="button" class="wiSave text-[11px] font-bold rounded-md px-2.5 py-1 bg-slate-900 text-white">저장</button><span class="wiMsg text-[11px]"></span></div>';
+            }).join("") + '<p class="text-[10px] text-slate-400">같은 평형의 최근 실거래가를 넣어 주세요 (네이버 부동산·호갱노노·국토부 실거래가 등). 저장하면 시트 \'부동산수익률\' 탭에 기록돼요.</p>';
+            Array.prototype.forEach.call(document.querySelectorAll("#whatIfInputs .wiInp"), function(inp) {
+                var row = inp.parentNode;
+                inp.addEventListener("input", function() { var n = inp.value.replace(/[^\d]/g, ""); inp.value = n ? Number(n).toLocaleString() : ""; row.querySelector(".wiHint").innerText = n ? eok(+n) : ""; });
+                row.querySelector(".wiSave").addEventListener("click", function() {
+                    var n = inp.value.replace(/[^\d]/g, ""), msg = row.querySelector(".wiMsg"), btn = this;
+                    btn.disabled = true; msg.className = "wiMsg text-[11px] text-slate-400"; msg.innerText = "저장 중...";
+                    fetch(GAS_API_URL, { method: "POST", body: JSON.stringify({ key: getKey(), action: "estateNow", name: inp.dataset.name, price: n }) })
+                        .then(function(r) { return r.json(); })
+                        .then(function(r) {
+                            if (r.status !== "success") throw new Error(r.message || "저장 실패");
+                            (data.estateTimeline || []).forEach(function(e) { if (e.name === inp.dataset.name) e.nowPrice = n ? +n : 0; });
+                            renderWhatIf(data);
+                        })
+                        .catch(function(e) { msg.className = "wiMsg text-[11px] text-rose-600"; msg.innerText = e.message; btn.disabled = false; });
+                });
+            });
+            // 계산
+            var loanOf = function(e) { return Math.max(0, (e.buyAmt || 0) - (e.investAmt || 0)); };
+            var actual = list.reduce(function(s, e) { return s + (e.profit || 0); }, 0);
+            var loanNow = loanOf(held);
+            // 이자율 추정: 월급분배의 '주담대 이자' ÷ 현재 대출 (없으면 4%)
+            var monthlyInt = 0;
+            ((data.budget && data.budget.groups) || []).forEach(function(g) { g.items.forEach(function(i) { if (/이자/.test(i.name) && i.cell && i.cell.value) monthlyInt += i.cell.value; }); });
+            var rate = (monthlyInt && loanNow) ? monthlyInt * 12 / loanNow : 0.04;
+            var sc = [{ name: "실제 선택", path: list.map(function(e) { return e.name; }).join(" → "), total: actual, price: held.sellAmt, loan: loanNow, cash: held.investAmt, actual: true }];
+            sold.forEach(function(e, i) {
+                if (!e.nowPrice) { sc.push({ name: e.name + "에 계속 살았다면", missing: true }); return; }
+                var prior = sold.slice(0, i).reduce(function(s, x) { return s + (x.profit || 0); }, 0);
+                var gain = e.nowPrice - e.buyAmt - (e.buyFee || 0) - (e.tax || 0);
+                // 이사 이후 실제로 살았던 집마다 (그 집 대출 − 계속 살았을 집 대출) × 이자율 × 그 집에 산 기간
+                var moveDate = e.s || new Date(), extraInt = 0, yrs = Math.max(0, (Date.now() - moveDate.getTime()) / (365.25 * 864e5));
+                list.filter(function(j) { return j.b >= e.b && j !== e; }).forEach(function(j) {
+                    var from = Math.max(j.b.getTime(), moveDate.getTime()), to = (j.status.trim() === "보유 중" || !j.s) ? Date.now() : j.s.getTime();
+                    if (to > from) extraInt += (loanOf(j) - loanOf(e)) * rate * (to - from) / (365.25 * 864e5);
+                });
+                sc.push({ name: e.name + "에 계속 살았다면", path: sold.slice(0, i).map(function(x) { return x.name; }).concat([e.name + " (계속)"]).join(" → "), total: prior + gain, price: e.nowPrice, loan: loanOf(e), cash: e.investAmt, extraInt: extraInt, yrs: yrs });
+            });
+            var ok = sc.filter(function(x) { return !x.missing; }), mx = Math.max.apply(null, ok.map(function(x) { return Math.abs(x.total); })) || 1;
+            var colors = ["#0f172a", "#6366f1", "#14b8a6", "#f59e0b"];
+            var html = '<div class="space-y-2.5">' + sc.map(function(x, i) {
+                if (x.missing) return '<div class="rounded-lg border border-dashed border-slate-200 px-3 py-2 text-[11px] text-slate-400">' + escHtml(x.name) + ' — 위에 지금 시세를 넣으면 계산돼요</div>';
+                var d = actual - x.total;
+                return '<div><div class="flex items-baseline justify-between gap-2"><p class="text-xs font-bold text-slate-800">' + (x.actual ? "✅ " : "🔀 ") + escHtml(x.name) + ' <span class="text-[10px] font-medium text-slate-400">' + escHtml(x.path) + '</span></p>' +
+                    '<p class="num text-sm font-extrabold ' + (x.total >= 0 ? "text-rose-600" : "text-blue-600") + '">' + signedEok(x.total) + '</p></div>' +
+                    '<div class="h-3 bg-slate-100 rounded-full mt-1 overflow-hidden"><div class="h-full rounded-full" style="width:' + (Math.max(0, x.total) / mx * 100).toFixed(1) + '%;background:' + colors[i % 4] + '"></div></div>' +
+                    (x.actual ? '' : '<p class="text-[11px] mt-1 ' + (d >= 0 ? "text-emerald-700" : "text-rose-600") + '">→ 실제 선택이 <b>' + signedEok(d) + '</b> ' + (d >= 0 ? "더 벌었어요" : "덜 벌었어요") +
+                        (Math.abs(x.extraInt) > 1e5 ? ' · 대신 대출이 ' + eok(Math.abs(x.loan - loanNow)) + ' ' + (loanNow > x.loan ? "많아서" : "적어서") + ' 이자를 약 ' + eok(Math.abs(x.extraInt)) + ' ' + (x.extraInt > 0 ? "더" : "덜") + ' 냈다고 보면 <b>' + signedEok(d - x.extraInt) + '</b>' : '') + '</p>') + '</div>';
+            }).join("") + '</div>';
+            html += '<div class="overflow-x-auto mt-3"><table class="w-full text-[11px] num"><thead><tr class="text-slate-400 border-b border-slate-100"><th class="text-left font-semibold py-1">시나리오</th><th class="text-right font-semibold">부동산 누적 이익</th><th class="text-right font-semibold">지금 집 시세</th><th class="text-right font-semibold">대출</th><th class="text-right font-semibold">들어간 내 돈</th></tr></thead><tbody>' +
+                ok.map(function(x) { return '<tr class="border-b border-slate-50"><td class="py-1.5 font-semibold text-slate-700">' + escHtml(x.name) + '</td><td class="text-right font-bold">' + signedEok(x.total) + '</td><td class="text-right">' + eok(x.price) + '</td><td class="text-right">' + eok(x.loan) + '</td><td class="text-right">' + eok(x.cash) + '</td></tr>'; }).join("") + '</tbody></table></div>';
+            html += '<p class="text-[10px] text-slate-400 mt-2 leading-relaxed">누적 이익 = 시세 차익 − 중개비 − 취득세 (계속 보유 시나리오는 팔지 않은 평가 이익). 대출 이자는 월급분배의 주담대 이자로 추정한 연 ' + (rate * 100).toFixed(1) + '%를 이사 이후 기간에 단순 적용한 대략치이고, 대출 원금 상환·양도세·보유세·실거주 만족도는 반영하지 않았어요. 실제 경로는 내 돈과 대출을 더 넣었기 때문에, 그 돈을 다른 곳에 두었을 때의 수익과도 함께 생각해야 해요.</p>';
+            document.getElementById("whatIfBody").innerHTML = html;
         }
 
         // ---- ⑤-1 자산 히스토리: 가로 타임라인 (배경 = 순자산 흐름) ----
